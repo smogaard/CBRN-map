@@ -477,11 +477,6 @@ function windArrow(deg){
   </span>`;
 }
 
-
- return a[Math.round(d/22.5)%16];
-}
-
-
 forecastSelect.onchange = () => {
   forecastHours = parseInt(forecastSelect.value);
   updateWeather();
