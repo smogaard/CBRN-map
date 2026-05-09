@@ -339,6 +339,9 @@ function getDayNight(date,pos){
   const res=await fetch(url,{headers:{"User-Agent":"CBRN-App"}});
   const data=await res.json();
   const now=data.properties.timeseries[0].data.instant.details;
+  
+  t0data = null;
+  ``
 
 console.log("NOW: ", now);
 	 
@@ -399,11 +402,24 @@ console.log("NOW: ", now);
 console.log("t0data (etter):", t0data);
 
 	 
-  // fallback hvis ingenting ble funnet
+  // fallback hvis T=0 ikke finnes
   if(!t0data && !t0.value){
     t0data = data.properties.timeseries[0].data.instant.details;
   }
-	 
+  // fallback hvis ingenting ble funnet
+  if(!t0data && t0time){
+    console.log("Fallback til forecast for T0");
+
+    for(const ts of data.properties.timeseries){
+      const tsTime = new Date(ts.time);
+
+      if(tsTime >= t0time){
+        t0data = ts.data.instant.details;
+        break;
+      }
+    }
+  }
+ 
   // oppdater vind
   if(t0data && t0data.wind_from_direction !== undefined){
      t0WindDir = t0data.wind_from_direction;
