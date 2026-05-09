@@ -346,7 +346,9 @@ const isPast = t0time < nowTime;
   const res=await fetch(url,{headers:{"User-Agent":"CBRN-App"}});
   const data=await res.json();
   const now=data.properties.timeseries[0].data.instant.details;
-  
+
+console.log("NOW: ", now);
+	 
   // ===== Hente historiske værdata =====
 
 
@@ -793,11 +795,6 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     [right2.lat, right2.lng],
 	[right3.lat, right3.lng]
   ];
-
-  
-console.log("CAP:", cap);
-console.log("leftEdge:", leftEdge);
-console.log("rightEdge:", rightEdge);
 
   return L.polygon([
     ...cap,
