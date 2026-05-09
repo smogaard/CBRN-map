@@ -334,7 +334,7 @@ function getDayNight(date,pos){
 }
 
     
-}async function updateWeather(){
+async function updateWeather(){
 
  const pos=marker.getLatLng();
  const url=`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${pos.lat}&lon=${pos.lng}`;
