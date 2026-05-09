@@ -360,6 +360,7 @@ console.log("NOW: ", now);
 console.log("t0time:", t0time);
 console.log("nowTime:", nowTime);
 console.log("t0data (før):", t0data);
+console.log("NOW: ", now);
 ``
 
   if(t0time){
@@ -447,7 +448,9 @@ console.log("t0data (etter):", t0data);
     }
   }
 	 
-  console.log("VISER I UI:", t0data);	
+  console.log("VISER I UI for T=0:", t0data);
+	 
+  console.log("VISER I UI for Nå:", now);
 	 
   //UI (uendret)
   temp_t0.innerHTML = t0data.air_temperature ?? "-";
