@@ -354,6 +354,10 @@ const isPast = t0time < nowTime;
   const t0time = t0.value ? new Date(t0.value) : null;
   const nowTime = new Date();
 
+console.log("t0time:", t0time);
+console.log("nowTime:", nowTime);
+console.log("t0data:", t0data);
+
   if(t0time){
 
     if(t0time < nowTime){
