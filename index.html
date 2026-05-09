@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>CBRN Kart</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+body { margin:0; }
+
+.controls {
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:white;
+  padding:10px;
+  z-index:1000;
+  font-family:sans-serif;
+  border-radius:8px;
+  min-width:400px;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:5px;
+}
+
+.col { width:50%; }
+
+.bigtime {
+  font-size:1.4em;
+  font-weight:bold;
+  margin-top:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+
+<!-- TOPP -->
+<div class="row">
+  <button onclick="newLocation()">Angi nytt sted</button>
+  <span id="coords">Klikk i kart</span>
+</div>
+
+<hr>
+
+<!-- UTSLIPP -->
+<div class="row">
+
+<button onclick="editEvent()">Type utslipp</button>
+
+<!-- INPUT -->
+<div id="inputBoxes">
+
+<select id="size">
+<option value="" disabled selected>&lt;velg&gt;</option>
+<option value="small">Lite</option>
+<option value="large">Stort</option>
+</select>
+
+<span>utslipp</span>
+
+<select id="locationType">
+<option value="" disabled selected>&lt;velg&gt;</option>
+<option value="på land">på land</option>
+<option value="i vann">i vann</option>
+<option value="på land og i vann">på land og i vann</option>
+</select>
+
+<select id="fireType">
+<option value="" disabled selected>&lt;velg&gt;</option>
+<option value="med brann">med brann</option>
+<option value="uten brann">uten brann</option>
+</select>
+
+</div>
+
+<!-- RESULTAT -->
+<span id="eventText" style="font-weight:bold;"></span>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col">
+UN-nr.:<br>
+<input id="un"><br>
+
+Hotzone:<br>
+<input id="hot" value="300">
+</div>
+
+<div class="col">
+Agens:<br>
+<input id="name"><br>
+
+Warmzone:<br>
+<input id="warm" value="800">
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col">
+<b>T=0</b><br>
+<input type="datetime-local" id="t0"><br>
+
+<span id="dn_t0"></span><br>
+Temp: <span id="temp_t0"></span><br>
+Vind: <span id="wind_t0"></span>
+</div>
+
+<div class="col">
+<b>Nå</b><br>
+<span id="nowtime"></span><br>
+
+<span id="dn_now"></span><br>
+Temp: <span id="temp_now"></span><br>
+Vind: <span id="wind_now"></span>
+</div>
+
+</div>
+
+Hvor langt frem vil du estimere:
+<select id="forecastSelect">
+  <option value="1">1 time</option>
+  <option value="2">2 timer</option>
+  <option value="6">6 timer</option>
+  <option value="12">12 timer</option>
+  <option value="24">24 timer</option>
+  <option value="48">48 timer</option>
+</select>
+
+<hr>
+
+<div class="bigtime" id="elapsed"></div>
+
+</div>
+
+<div id="map" style="height:100vh"></div>
+
+<script>
+
+/* =============================
+1 MAP
+============================= */
+const map = L.map('map').setView([60.39,5.32],13);
+L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png").addTo(map);
+
+let marker, hotCircle, warmCircle, plume;
+let lastWindDir = 0;
+let locked = false;
+let forecastHours = 1;
+let dynamicPlume;
+let t0WindDir = 0;
+let t0data;
+
+
+/* =============================
+2 ICON
+============================= */
+const icon = L.divIcon({
+ html:'<div style="font-size:42px; transform:translate(-2px,2px)">💥</div>',
+ className:"",
+ iconSize:[50,50],
+ iconAnchor:[27,28]
+});
+
+/* =============================
+3 ERG
+============================= */
+const ERG_DATA=[
+ {un:"1017",name:"Klor",hot:200,warm:1500},
+ {un:"1005",name:"Ammoniakk",hot:100,warm:500}
+];
+
+function findByUN(u){return ERG_DATA.find(e=>e.un===u);}
+function findByName(n){return ERG_DATA.find(e=>e.name.toLowerCase()===n.toLowerCase());}
+
+/* =============================
+4 DAG/NATT
+============================= */
+function getSunTimes(lat, lon, date){
+
+ const rad = Math.PI / 180;
+
+ const day = Math.floor(
+  (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+   Date.UTC(date.getFullYear(), 0, 0)) / 86400000
+ );
+
+ const lngHour = lon / 15;
+
+ function calc(isSunrise){
+
+  const t = day + ((isSunrise ? 6 : 18) - lngHour) / 24;
+
+  const M = (0.9856 * t) - 3.289;
+
+  let L = M
+   + 1.916 * Math.sin(M * rad)
+   + 0.020 * Math.sin(2 * M * rad)
+   + 282.634;
+
+  L = (L + 360) % 360;
+
+  let RA = Math.atan(0.91764 * Math.tan(L * rad)) / rad;
+  RA = (RA + 360) % 360;
+  RA = RA / 15;
+
+  const sinDec = 0.39782 * Math.sin(L * rad);
+  const cosDec = Math.cos(Math.asin(sinDec));
+
+  const cosH = (
+   Math.cos(90.833 * rad) -
+   (sinDec * Math.sin(lat * rad))
+  ) / (cosDec * Math.cos(lat * rad));
+
+  if (cosH > 1) return null;   // alltid natt
+  if (cosH < -1) return null;  // alltid dag
+
+  let H = isSunrise
+   ? 360 - Math.acos(cosH) / rad
+   : Math.acos(cosH) / rad;
+
+  H = H / 15;
+
+  const T = H + RA - (0.06571 * t) - 6.622;
+
+  return (T - lngHour) % 24;
+ }
+
+ return {
+  sunrise: calc(true),
+  sunset: calc(false)
+ };
+}
+
+function getDayNight(date,pos){
+
+  if(!date || !pos) return "day";
+
+  const lat = pos.lat;
+  const lon = pos.lng;
+
+  const sun = getSunTimes(lat, lon, date);
+
+  // ✅ polarnatt / midnattssol
+  if(sun.sunrise === null || sun.sunset === null){
+    return sun.sunrise === null ? "night" : "day";
+  }
+
+  // lokal tid (inkl sommertid)
+  const hours = date.getHours() + date.getMinutes()/60;
+
+  const offset = -date.getTimezoneOffset() / 60;
+
+  let sunriseLocal = sun.sunrise + offset;
+  let sunsetLocal = sun.sunset + offset;
+
+  // normaliser
+  if (sunriseLocal < 0) sunriseLocal += 24;
+  if (sunriseLocal > 24) sunriseLocal -= 24;
+
+  if (sunsetLocal < 0) sunsetLocal += 24;
+  if (sunsetLocal > 24) sunsetLocal -= 24;
+
+  return (hours >= sunriseLocal && hours <= sunsetLocal)
+    ? "day"
+    : "night";
+}
+/* =============================
+5 WEATHER
+============================= */
+      
+  async function getHistoricalWeather(lat, lon, time){
+
+    const clientId = "c2bde4a4-68bf-46d0-968a-e8c1fb92ee4f";
+    const clientSecret = "030531ed-53a4-49fb-87e0-aec6054faeea";
+
+    const url = "https://frost.met.no/observations/v0.jsonld"
+      + "?sources=SN50540"
+      + "&elements=air_temperature,wind_speed,wind_from_direction"
+      + "&referencetime=" + time.toISOString();
+
+    const proxy = "https://corsproxy.io/?";   // ✅ HER
+
+    try{
+      const res = await fetch(proxy + encodeURIComponent(url), {   // ✅ HER
+        headers: {
+          "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
+        }
+      });
+
+      const json = await res.json();
+  
+      if(json.data && json.data.length > 0){
+  
+        let result = {};
+
+        for(const item of json.data){
+          result[item.elementId] = item.value;
+        }
+
+        return {
+          air_temperature: result.air_temperature,
+          wind_speed: result.wind_speed,
+          wind_from_direction: result.wind_from_direction
+        };
+      }
+
+    }catch(e){
+    console.log("Frost error:", e);
+    return null;
+	}
+
+    
+}async function updateWeather(){
+
+const nowTime = new Date();
+const t0time = new Date(t0.value);
+
+const isPast = t0time < nowTime;
+
+
+
+ const pos=marker.getLatLng();
+ const url=`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${pos.lat}&lon=${pos.lng}`;
+
+ 
+ try{
+  const res=await fetch(url,{headers:{"User-Agent":"CBRN-App"}});
+  const data=await res.json();
+  const now=data.properties.timeseries[0].data.instant.details;
+  
+  // ===== Hente historiske værdata =====
+
+
+  // ===== T0 LOGIKK (fortid vs fremtid) =====
+  const t0time = t0.value ? new Date(t0.value) : null;
+  const nowTime = new Date();
+
+  if(t0time){
+
+    if(t0time < nowTime){
+
+      // 🔥 HISTORISK DATA
+      const hist = await getHistoricalWeather(pos.lat, pos.lng, t0time);
+
+      if(hist){
+        t0data = hist;
+      }
+	} else {
+
+      // 🔥 FREMTID (forecast)
+      for(const ts of data.properties.timeseries){
+
+          const tsTime = new Date(ts.time);
+
+          if(tsTime >= t0time){
+            t0data = ts.data.instant.details;
+            break;
+          }
+      }
+
+    }
+
+}	 
+	 
+  if(isPast){
+
+  // MET har ikke historikk – bruk nærmeste tilgjengelige bakover
+  let oldest = data.properties.timeseries[0];
+
+  for(const ts of data.properties.timeseries){
+
+    if(new Date(ts.time) <= nowTime){
+      oldest = ts;
+    } else {
+      break;
+    }
+  }
+
+  t0data = oldest.data.instant.details;
+}
+
+ if(!marker) return;temp_now.innerHTML = now.air_temperature+" °C";
+  
+  wind_now.innerHTML =
+   windArrow(now.wind_from_direction + 180)+" "+
+   "fra "+windText(now.wind_from_direction)+" "+
+   now.wind_speed.toFixed(1)+" m/s";
+   
+  lastWindDir = now.wind_from_direction;
+  
+  if(dynamicPlume){
+   map.removeLayer(dynamicPlume);
+  }
+
+  // fallback hvis ingenting ble funnet
+  if(!t0data && !t0.value){
+    t0data = data.properties.timeseries[0].data.instant.details;
+  }
+	 
+  // oppdater vind
+  if(t0data && t0data.wind_from_direction !== undefined){
+     t0WindDir = t0data.wind_from_direction;
+  }
+  
+  // lag NY plume hvis t0 har verdi
+  if(t0.value){
+    dynamicPlume = createDynamicPlume(
+       marker.getLatLng(),
+       Number(hot.value),
+       data.properties.timeseries,
+       t0WindDir + 180
+    );
+	
+    // legg til NY plume
+    if(dynamicPlume){
+       map.addLayer(dynamicPlume);
+    }
+  }
+	 
+  console.log("plume:", dynamicPlume);
+	
+  //UI (uendret)
+  temp_t0.innerHTML = t0data.air_temperature ?? "-";
+
+  wind_t0.innerHTML =
+    t0data.wind_from_direction != null
+      ? windArrow(t0data.wind_from_direction + 180)+" "+
+        "fra "+windText(t0data.wind_from_direction)+" "+
+        (t0data.wind_speed ?? 0).toFixed(1)+" m/s"
+      : "-";
+
+}catch(e){
+  console.log("Weather error:", e);
+  dynamicPlume = null;
+}
+}  
+
+
+function windText(d){
+ const dirs=[
+"N","NNØ","NØ","ØNØ",
+  "Ø","ØSØ","SØ","SSØ",
+  "S","SSV","SV","VSV",
+  "V","VNV","NV","NNV"
+];
+ return dirs[Math.round(d/22.5)%16];
+}
+
+function windArrow(d){
+ const a=
+[
+  "↑","↑↗","↗","→↗",
+  "→","→↘","↘","↓↘",
+  "↓","↓↙","↙","←↙",
+  "←","←↖","↖","↑↖"
+ ];
+
+
+ return a[Math.round(d/22.5)%16];
+}
+
+
+forecastSelect.onchange = () => {
+  forecastHours = parseInt(forecastSelect.value);
+  updateWeather();
+};
+
+
+/* =============================
+6 EVENT TEXT (NY)
+============================= */
+
+function updateEventText(){
+
+ const size = sizeSelect.value;
+ const loc = locationType.value;
+ const fire = fireType.value;
+
+ if(!size || !loc || !fire) return;
+
+ const sizeText = size==="small" ? "Lite" : "Stort";
+
+ eventText.innerHTML = `${sizeText} utslipp ${loc} ${fire}`;
+
+ // skjul input
+ inputBoxes.style.display = "none";
+}
+
+
+/* =============================
+7 EDIT BUTTON
+============================= */
+function editEvent(){
+
+  // vis dropdowns
+  inputBoxes.style.display = "flex";
+
+  // skjul ferdig tekst
+  document.getElementById("eventText").innerHTML = "";
+}
+
+/* =============================
+8 TIME
+============================= */
+function updateNow(){
+ const now=new Date();
+ nowtime.innerHTML=now.toLocaleString();
+
+ if(marker){
+   dn_now.innerHTML =
+    getDayNight(now,marker.getLatLng())==="day"?"☀️ Dag":"🌙 Natt";
+ }
+}
+
+/* =============================
+9 ELAPSED
+============================= */
+function updateElapsed(){
+
+ const val=t0.value;
+ if(!val){
+   elapsed.innerHTML="";
+   return;
+ }
+
+ const start=new Date(val);
+ const now=new Date();
+
+ let diff=Math.floor((now-start)/1000);
+
+ const days=Math.floor(diff/86400);
+ diff%=86400;
+
+ const h=Math.floor(diff/3600);
+ diff%=3600;
+
+ const m=Math.floor(diff/60);
+ const s=diff%60;
+
+ if(days>0){
+   const dayText = days===1?"dag":"dager";
+   elapsed.innerHTML = `Tid siden hendelse: ${days} ${dayText}, ${h}t ${m}m ${s}s`;
+ } else {
+   elapsed.innerHTML = `Tid siden hendelse: ${h}t ${m}m ${s}s`;
+ }
+}
+
+/* =============================
+10 MAP
+============================= */
+function placeIncident(pos){
+
+ marker && map.removeLayer(marker);
+ hotCircle && map.removeLayer(hotCircle);
+ warmCircle && map.removeLayer(warmCircle);
+
+ marker=L.marker(pos,{icon}).addTo(map);
+
+ coords.innerHTML =
+  "Ulykkessted: "+pos.lat.toFixed(5)+"° N, "+pos.lng.toFixed(5)+"° Ø";
+
+ updateMap();
+ updateWeather();
+ updateNow();
+ 
+// ✅ oppdater dag/natt med en gang
+if(t0.value){
+  dn_t0.innerHTML =
+    getDayNight(new Date(t0.value), pos)==="day"?"☀️ Dag":"🌙 Natt";
+}
+
+// ✅ oppdater nå-visning med en gang
+dn_now.innerHTML =
+  getDayNight(new Date(), pos)==="day"?"☀️ Dag":"🌙 Natt";
+
+}
+
+function updateMap(){
+
+ if(!marker) return;
+
+ const pos = marker.getLatLng();
+
+ const hotR = +hot.value;
+ const warmR = +warm.value;
+
+ // fjern gamle
+ hotCircle && map.removeLayer(hotCircle);
+ warmCircle && map.removeLayer(warmCircle);
+ plume && map.removeLayer(plume);
+
+ // 🔴 HOTZONE (uendret)
+ hotCircle = L.circle(pos,{
+   radius: hotR,
+   color: "red",
+   fillColor: "red",
+   fillOpacity: 0.3
+ }).addTo(map);
+
+ // 🟠 YTRE RING (ny stil)
+ warmCircle = L.circle(pos,{
+   radius: warmR,
+   color: "red",
+   dashArray: "6,6",
+   fillOpacity: 0
+ }).addTo(map);
+
+ // 🔥 Hent vindretning (fra weather cache senere)
+ let windDir = 0;
+
+ if(lastWindDir !== undefined){
+   windDir = t0WindDir + 180; // plume går MED vinden
+ }
+
+ // ✳️ lag plume
+
+
+// ✅ vis kun plumer hvis T0 er satt
+if(t0.value){
+
+  plume = createPlume(pos, hotR, warmR, windDir).addTo(map);
+
+  if(dynamicPlume && dynamicPlume.bringToBack){
+    dynamicPlume.addTo(map);
+    dynamicPlume.bringToBack();
+  }
+
+}
+
+// sørg for at hotzone ligger øverst
+if(hotCircle){
+  hotCircle.bringToFront();
+}
+}
+
+
+function getStability(windSpeed){
+  if(windSpeed < 2) return "A";
+  if(windSpeed < 4) return "B";
+  if(windSpeed < 6) return "C";
+  return "D";
+}
+
+
+function getSpreadFactor(stability){
+  return {
+    "A": 2.0,
+    "B": 1.6,
+    "C": 1.3,
+    "D": 1.0
+  }[stability] || 1.0;
+}
+ 
+function createPlume(center, hotR, warmR, windDeg){
+
+  const lat = center.lat;
+  const lon = center.lng;
+
+  const rad = Math.PI/180;
+  const steps = 20;
+
+  const points = [];
+
+  const wind = windDeg * rad;
+
+  // ✅ halvsirkel
+  for(let i = 0; i <= steps; i++){
+    const a = wind - Math.PI/2 + (i/steps)*Math.PI;
+    const p = destination(lat, lon, a, hotR);
+    points.push([p.lat, p.lng]);
+  }
+
+  // ✅ ytterbue
+  const outer = [];
+  for(let i = 0; i <= steps; i++){
+    const a = wind - 0.5 + (i/steps)*1.0;
+    const p = destination(lat, lon, a, warmR);
+    outer.push([p.lat, p.lng]);
+  }
+
+
+  for(let i = outer.length-1; i >= 0; i--){
+    points.push(outer[i]);
+  }
+		
+  return L.polygon(points,{
+    color:"orange",
+    fillColor:"orange",
+    fillOpacity:0.3
+  });
+}
+function destination(lat, lon, angle, dist){
+
+ const R = 6378137;
+
+ const newLat = lat + (dist * Math.cos(angle)) / R * (180/Math.PI);
+ const newLon = lon + (dist * Math.sin(angle)) / R * (180/Math.PI) / Math.cos(lat*Math.PI/180);
+
+ return {lat:newLat, lng:newLon};
+}
+
+function createDynamicPlume(center, hotR, timeseries, windStart){
+
+  console.log("hotR inne i plume:", hotR)
+  const rad = Math.PI/180;
+  const steps = 20;
+  
+  // enkel retning
+
+  const d = timeseries[0].data.instant.details;
+
+  const dir = (d.wind_from_direction + 180) * rad;
+
+
+  // to punkter fremover
+  const step = 1500; // meter
+
+  let current = center;
+  
+  
+   // cap (den du fikk til tidligere)
+  
+  let cap = [];
+
+  for(let i=0;i<=steps;i++){
+    const a = dir - Math.PI/2 +	(i/steps)*Math.PI;
+
+    const p = destination(center.lat, center.lng, a, hotR);
+    cap.push([p.lat,p.lng]);
+  }
+	
+  if(!cap || cap.length === 0){
+    console.error("CAP er tom!");
+    return null;
+  }
+  
+  const startLeft = cap[0];
+  const startRight = cap[cap.length - 1];
+
+  if(!startLeft || !startRight){
+    console.error("Cap startpunkter er undefined");
+    return null;
+  }
+  
+  cap.reverse()
+	
+  // 🔥 startpunkter direkte fra cap
+  let left = { lat: cap[0][0], lng: cap[0][1] };
+  let right = { lat: cap[cap.length - 1][0], lng: cap[cap.length - 1][1] };
+
+  // fremdrift langs vind
+  let left2  = destination(left.lat, left.lng, dir, 1000);
+  let left3  = destination(left2.lat, left2.lng, dir, 2000);
+
+  let right2 = destination(right.lat, right.lng, dir, 1000);
+  let right3 = destination(right2.lat, right2.lng, dir, 2000);
+
+  // bygg kantene riktig retning
+  const leftEdge = [
+    [left3.lat, left3.lng],
+    [left2.lat, left2.lng],
+	[left.lat, left.lng]
+  ];
+
+  const rightEdge = [
+    [right.lat, right.lng],
+    [right2.lat, right2.lng],
+	[right3.lat, right3.lng]
+  ];
+
+  
+console.log("CAP:", cap);
+console.log("leftEdge:", leftEdge);
+console.log("rightEdge:", rightEdge);
+
+  return L.polygon([
+    ...cap,
+    ...rightEdge,
+	...leftEdge
+   // 🔥 NØKKELEN
+  ],{
+    color:"#888",
+    weight:1.5,
+    dashArray:"4,8",
+    fill:true,
+    fillOpacity:0.15,
+    fillColor:"#666"
+  });
+}
+/* =============================
+11 CLICK
+============================= */
+map.on("click", e=>{
+ if(locked) return;
+ placeIncident(e.latlng);
+ locked=true;
+});
+
+/* =============================
+12 EVENTS
+============================= */
+const sizeSelect = document.getElementById("size");
+
+size.onchange = updateEventText;
+locationType.onchange = updateEventText;
+fireType.onchange = updateEventText;
+
+un.oninput = ()=>{
+ const d=findByUN(un.value);
+ if(!d) return;
+
+ name.value = d.name;
+ hot.value = d.hot;
+ warm.value = d.warm;
+
+ updateMap();
+ updateWeather();   // ✅ LEGG TIL DENNE
+};
+
+name.oninput = ()=>{
+ const d=findByName(name.value);
+ if(!d) return;
+
+ un.value = d.un;
+ hot.value = d.hot;
+ warm.value = d.warm;
+
+ updateMap();
+ updateWeather();   // ✅ LEGG TIL
+};
+
+
+t0.oninput = () =>{
+
+ if(!marker) return;
+
+ const pos = marker.getLatLng();
+ const d = new Date(t0.value);
+
+ dn_t0.innerHTML =
+  getDayNight(d,pos)==="day"?"☀️ Dag":"🌙 Natt";
+ 
+ if(t0.value){
+  updateWeather();
+ } 
+ updateWeather();
+ updateMap();
+ 
+};
+
+hot.oninput = () => {
+  updateMap();
+
+  // 🔴 Tving plume refresh med en gang (uten API-delay)
+  if(t0.value && marker){
+
+    if(dynamicPlume){
+      map.removeLayer(dynamicPlume);
+    }
+
+    dynamicPlume = createDynamicPlume(
+      marker.getLatLng(),
+      Number(hot.value),
+      [],            // vi bruker ikke timeseries her
+      t0WindDir + 180
+    );
+
+    if(dynamicPlume){
+      map.addLayer(dynamicPlume);
+    }
+  }
+	
+  updateWeather();
+};
+
+function newLocation(){ locked=false; }
+
+/* =============================
+INTERVALS
+============================= */
+setInterval(updateNow,60000);
+setInterval(updateWeather,600000);
+setInterval(updateElapsed,1000);
+
+
+
+
+updateNow();  // ✅ kjør én gang ved start
+
+</script>
+
+</body>
+</html>
