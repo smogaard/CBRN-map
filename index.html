@@ -354,9 +354,11 @@ const isPast = t0time < nowTime;
   const t0time = t0.value ? new Date(t0.value) : null;
   const nowTime = new Date();
 
+
 console.log("t0time:", t0time);
 console.log("nowTime:", nowTime);
-console.log("t0data:", t0data);
+console.log("t0data (før):", t0data);
+``
 
   if(t0time){
 
@@ -414,7 +416,10 @@ console.log("t0data:", t0data);
   if(dynamicPlume){
    map.removeLayer(dynamicPlume);
   }
+	 
+console.log("t0data (etter):", t0data);
 
+	 
   // fallback hvis ingenting ble funnet
   if(!t0data && !t0.value){
     t0data = data.properties.timeseries[0].data.instant.details;
