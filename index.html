@@ -331,13 +331,6 @@ function getDayNight(date,pos){
     
 }async function updateWeather(){
 
-const nowTime = new Date();
-const t0time = new Date(t0.value);
-
-const isPast = t0time < nowTime;
-
-
-
  const pos=marker.getLatLng();
  const url=`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${pos.lat}&lon=${pos.lng}`;
 
@@ -390,24 +383,7 @@ console.log("NOW: ", now);
 
 }	 
 	 
-  if(isPast){
-
-  // MET har ikke historikk – bruk nærmeste tilgjengelige bakover
-  let oldest = data.properties.timeseries[0];
-
-  for(const ts of data.properties.timeseries){
-
-    if(new Date(ts.time) <= nowTime){
-      oldest = ts;
-    } else {
-      break;
-    }
-  }
-
-  t0data = oldest.data.instant.details;
-}
-
- if(!marker) return;temp_now.innerHTML = now.air_temperature+" °C";
+  if(!marker) return;temp_now.innerHTML = now.air_temperature+" °C";
   
   wind_now.innerHTML =
    windArrow(now.wind_from_direction + 180)+" "+
