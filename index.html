@@ -289,44 +289,49 @@ function getDayNight(date,pos){
       
   async function getHistoricalWeather(lat, lon, time){
 
-    const clientId = "c2bde4a4-68bf-46d0-968a-e8c1fb92ee4f";
-    const clientSecret = "030531ed-53a4-49fb-87e0-aec6054faeea";
+  const clientId = "c2bde4a4-68bf-46d0-968a-e8c1fb92ee4f";
+  const clientSecret = "030531ed-53a4-49fb-87e0-aec6054faeea";
 
-    const url = "https://frost.met.no/observations/v0.jsonld"
-      + "?sources=SN50540"
-      + "&elements=air_temperature,wind_speed,wind_from_direction"
-      + "&referencetime=" + time.toISOString();
+  const url = "https://frost.met.no/observations/v0.jsonld"
+    + "?sources=SN50540"
+    + "&elements=air_temperature,wind_speed,wind_from_direction"
+    + "&referencetime=" + time.toISOString();
 
-    const proxy = "https://corsproxy.io/?";   // ✅ HER
+  try{
+    const res = await fetch(url, {
+      headers: {
+        "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
+      }
+    });
 
-    try{
-      const res = await fetch(proxy + encodeURIComponent(url), {   // ✅ HER
-        headers: {
-          "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
-        }
-      });
+    const json = await res.json();
 
-      const json = await res.json();
-  
-      if(json.data && json.data.length > 0){
-  
-        let result = {};
+    console.log("FROST RAW:", json);
 
-        for(const item of json.data){
-          result[item.elementId] = item.value;
-        }
+    if(json.data && json.data.length > 0){
 
-        return {
-          air_temperature: result.air_temperature,
-          wind_speed: result.wind_speed,
-          wind_from_direction: result.wind_from_direction
-        };
+      const observations = json.data[0].observations;
+
+      let result = {};
+
+      for(const item of observations){
+        result[item.elementId] = item.value;
       }
 
-    }catch(e){
+      console.log("FROST PARSED:", result);
+
+      return {
+        air_temperature: result.air_temperature,
+        wind_speed: result.wind_speed,
+        wind_from_direction: result.wind_from_direction
+      };
+    }
+
+  } catch(e){
     console.log("Frost error:", e);
     return null;
-	}
+  }
+}
 
     
 }async function updateWeather(){
