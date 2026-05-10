@@ -806,13 +806,17 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
   const step = timeseries[i];
 
-  // ✅ konverter FRA → TIL
+  for (let i = 0; i < timeseries.length; i++) {
+
+  const step = timeseries[i];
+
+  // ✅ FRA → TIL (kun her!)
   const stepDir = (step.dir + 180) * Math.PI / 180;
 
-  // ✅ fremdrift
+  // fremdrift
   const dist = Math.max(300, step.speed * 600);
 
-  // flytt center frem
+  // flytt center
   currentCenter = destination(
     currentCenter.lat,
     currentCenter.lng,
@@ -820,18 +824,71 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     dist
   );
 
-  // ✅ bredde vokser jevnt
-  const width = hotR + i * step.speed * 120;
+  // 🔥 beregn forrige retning
+  const prevDir = i === 0
+    ? dir
+    : (timeseries[i-1].dir + 180) * Math.PI / 180;
 
-  // ✅ sidepunkter bygges rett fra center
-  const leftDir = stepDir - Math.PI/2;
-  const rightDir = stepDir + Math.PI/2;
+  let delta = stepDir - prevDir;
 
-  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+  // normaliser
+  if (delta > Math.PI) delta -= 2*Math.PI;
+  if (delta < -Math.PI) delta += 2*Math.PI;
 
-  leftEdge.push([leftPoint.lat, leftPoint.lng]);
-  rightEdge.push([rightPoint.lat, rightPoint.lng]);
+  const turn = Math.abs(delta);
+
+  // 🔥 beregn bredde fra forrige steg
+  const dx = currentLeft.lat - currentRight.lat;
+  const dy = currentLeft.lng - currentRight.lng;
+  const prevWidth = Math.sqrt(dx*dx + dy*dy);
+
+  // ---------- ✅ LITEN VINDENDRING ----------
+  if (turn < 0.2) {
+
+    const width = hotR + i * 120;
+
+    const leftDir = stepDir - Math.PI/2;
+    const rightDir = stepDir + Math.PI/2;
+
+    currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+
+    leftEdge.push([currentLeft.lat, currentLeft.lng]);
+    rightEdge.push([currentRight.lat, currentRight.lng]);
+
+  }
+
+  // ---------- ✅ STOR VINDENDRING → BUE ----------
+  else {
+
+    const segments = 6;
+
+    for (let s = 1; s <= segments; s++) {
+
+      const interpDir =
+        prevDir + delta * (s / segments);
+
+      currentCenter = destination(
+        currentCenter.lat,
+        currentCenter.lng,
+        interpDir,
+        dist / segments
+      );
+
+      // 🔥 radius = forrige bredde
+      const radius = prevWidth;
+
+      const leftDir = interpDir - Math.PI/2;
+      const rightDir = interpDir + Math.PI/2;
+
+      const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, radius);
+      const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, radius);
+
+      leftEdge.push([leftPoint.lat, leftPoint.lng]);
+      rightEdge.push([rightPoint.lat, rightPoint.lng]);
+    }
+  }
+}
 }
 																					
 
