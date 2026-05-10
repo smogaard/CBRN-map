@@ -820,10 +820,10 @@ const forward = stepDir;
 const spread = 0.3;  // justerbar (≈17°)
 
 // venstre = litt til venstre for forward
-const leftDir = forward - Math.PI/2 + spread;
+const leftDir = forward + Math.PI/2 + spread;
 
 // høyre = litt til høyre for forward
-const rightDir = forward + Math.PI/2 - spread;
+const rightDir = forward - Math.PI/2 - spread;
 
 // flytt frem og ut
 currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
