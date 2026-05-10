@@ -901,10 +901,10 @@ else {
 
   if (turningLeft) {
   // høyre side = ytter
-    edgeDir = interpDir + Math.PI/2;
+    edgeDir = interpDir - Math.PI/2;
   } else {
   // venstre side = ytter
-    edgeDir = interpDir - Math.PI/2;
+    edgeDir = interpDir + Math.PI/2;
   }
   
     const p = destination(
