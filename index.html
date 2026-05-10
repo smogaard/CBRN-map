@@ -880,55 +880,45 @@ else {
     rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
-  // ✅ YTTERSIDE (konveks) → BUE rundt innerkant
-
-  // finn pivot (innerside før svingen)
-  let pivot;
-
-  if (turningLeft) {
-    pivot = { ...currentLeft };   // venstre er inner
-  } else {
-    pivot = { ...currentRight };  // høyre er inner
-  }
-
-// ✅ BUE: roter ytterpunkt rundt pivot
-
-// finn startpunkt (ytterkant før svingen)
-let startPoint;
-
-if (turningLeft) {
-  startPoint = { ...currentRight };   // høyre er ytter
-} else {
-  startPoint = { ...currentLeft };    // venstre er ytter
-}
+// ✅ YTTERSIDE (konveks) → BUE ved å bøye retning (IKKE rotasjon)
 
 for (let s = 1; s <= segments; s++) {
 
-  const angle = (turningLeft ? -delta : delta) * (s / segments);
+  // gradvis endring i vindretning
+  const interpDir =
+    prevDir + delta * (s / segments);
 
-  // lokal rotasjon rundt pivot (flat approx)
-const latFactor = Math.cos(pivot.lat * Math.PI / 180);
+  const half = width / 2;
 
-// korriger koordinater
-const dx = startPoint.lat - pivot.lat;
-const dy = (startPoint.lng - pivot.lng) * latFactor;
-
-const rx =
-  dx * Math.cos(angle) - dy * Math.sin(angle);
-
-const ry =
-  dx * Math.sin(angle) + dy * Math.cos(angle);
-
-// tilbake til lat/lng
-const rotatedLat = pivot.lat + rx;
-const rotatedLng = pivot.lng + ry / latFactor;
-	
   if (turningLeft) {
-    rightEdge.push([rotatedLat, rotatedLng]);
+
+    // høyre side er ytter
+    const edgeDir = interpDir + Math.PI/2;
+
+    currentRight = destination(
+      currentCenter.lat,
+      currentCenter.lng,
+      edgeDir,
+      half
+    );
+
+    rightEdge.push([currentRight.lat, currentRight.lng]);
+
   } else {
-    leftEdge.push([rotatedLat, rotatedLng]);
+
+    // venstre side er ytter
+    const edgeDir = interpDir - Math.PI/2;
+
+    currentLeft = destination(
+      currentCenter.lat,
+      currentCenter.lng,
+      edgeDir,
+      half
+    );
+
+    leftEdge.push([currentLeft.lat, currentLeft.lng]);
   }
-}  
+}
   }
 }
 
