@@ -845,6 +845,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
+																					console.log(currentLeft, currentRight)
+
   return L.polygon([
     ...cap,
     ...rightEdge,
