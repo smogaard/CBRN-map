@@ -418,7 +418,7 @@ console.log("T0 faktisk:", t0data.wind_from_direction);
    dynamicPlume = createDynamicPlume(
        marker.getLatLng(),
        Number(hot.value),
-       [],
+       [], // vi bruker ikke timeseries
        t0WindDir + 180
    );
 	
@@ -713,7 +713,7 @@ function destination(lat, lon, angle, dist){
 
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
-  if(!windStart){
+  if(windStart === undefined || windStart === null){
   console.warn("Ingen vindretning gitt");
   return null;
 }
