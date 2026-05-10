@@ -904,7 +904,7 @@ if (turningLeft) {
 
 for (let s = 1; s <= segments; s++) {
 
-  const angle = delta * (s / segments);
+  const angle = (turningLeft ? -delta : delta) * (s / segments);
 
   // lokal rotasjon rundt pivot (flat approx)
 const latFactor = Math.cos(pivot.lat * Math.PI / 180);
