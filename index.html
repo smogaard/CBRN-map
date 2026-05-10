@@ -841,8 +841,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
 
   // oppdater edges
-  leftEdge.push([newLeft.lat, newLeft.lng]);
-  rightEdge.push([newRight.lat, newRight.lng]);
+  leftEdge.push([currentLeft.lat, currentLeft.lng]);
+  rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
   return L.polygon([
