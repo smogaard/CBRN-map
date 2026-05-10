@@ -321,13 +321,13 @@ async function getHistoricalWeather(lat, lon, time){
     return null;
   }
 }
-    
+
+	
 async function updateWeather(){
 
  const pos=marker.getLatLng();
  const url=`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${pos.lat}&lon=${pos.lng}`;
 
- 
  try{
   const res=await fetch(url,{headers:{"User-Agent":"CBRN-App"}});
   const data=await res.json();
@@ -336,7 +336,7 @@ async function updateWeather(){
   t0data = null;
   ``
 
-console.log("NOW: ", now);
+  console.log("NOW: ", now);
 	 
   // ===== Hente historiske værdata =====
 
@@ -345,7 +345,7 @@ console.log("NOW: ", now);
   const t0time = t0.value ? new Date(t0.value) : null;
   const nowTime = new Date();
 
-``
+  ``
 
   if(t0time){
 
@@ -369,10 +369,8 @@ console.log("NOW: ", now);
             break;
           }
       }
-
     }
-
-}	 
+  }	 
 	 
   if(!marker) return;temp_now.innerHTML = now.air_temperature+" °C";
   
@@ -405,22 +403,42 @@ console.log("NOW: ", now);
     }
   }
  
-
-
   // oppdater vind
   if(t0data && t0data.wind_from_direction !== undefined){
      t0WindDir = t0data.wind_from_direction;
   }
-	 
-console.log("PLUME bruker t0WindDir:", t0WindDir);
-console.log("T0 faktisk:", t0data.wind_from_direction);
-	 
- if(t0.value){
+	  
+  if(t0.value){
+   const windTrack = [];
 
+  // start med T0
+  windTrack.push({
+    dir: t0data.wind_from_direction,
+    speed: t0data.wind_speed
+  });
+
+  // legg til noen fremtidspunkter (forecast)
+  for (const ts of data.properties.timeseries){
+  
+    const tsTime = new Date(ts.time);
+
+    if (tsTime > nowTime){
+
+      windTrack.push({
+        dir: ts.data.instant.details.wind_from_direction,
+        speed: ts.data.instant.details.wind_speed
+      });
+    }
+
+    if (windTrack.length >= 6) break; // begrens lengde
+  }
+	  
+																						console.log("windTrack:", windTrack)
+	  
   dynamicPlume = createDynamicPlume(
      marker.getLatLng(),
      Number(hot.value),
-     [],
+     windTrack,
      t0WindDir + 180
   );
 
@@ -435,9 +453,7 @@ console.log("T0 faktisk:", t0data.wind_from_direction);
     map.removeLayer(dynamicPlume);
     dynamicPlume = null;
   }
-
 }
-
 	 
   console.log("VISER I UI for T=0:", t0data);
 	 
@@ -461,7 +477,7 @@ console.log("T0 faktisk:", t0data.wind_from_direction);
 }
 }  
 
-
+	
 function windText(d){
  const dirs=[
 "N","NNØ","NØ","ØNØ",
@@ -472,6 +488,7 @@ function windText(d){
  return dirs[Math.round(d/22.5)%16];
 }
 
+	
 function windArrow(deg){
   return `
   <span style="display:inline-block; transform: rotate(${deg}deg);">
@@ -675,7 +692,8 @@ function getSpreadFactor(stability){
     "D": 1.0
   }[stability] || 1.0;
 }
- 
+
+	
 function createPlume(center, hotR, warmR, windDeg){
 
   const lat = center.lat;
@@ -714,6 +732,8 @@ function createPlume(center, hotR, warmR, windDeg){
     fillOpacity:0.3
   });
 }
+
+	
 function destination(lat, lon, angle, dist){
 
  const R = 6378137;
@@ -724,6 +744,7 @@ function destination(lat, lon, angle, dist){
  return {lat:newLat, lng:newLon};
 }
 
+	
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
   if(windStart === undefined || windStart === null){
@@ -736,8 +757,6 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const steps = 20;
   
   // enkel retning
-
-
 
   const dir = windStart * rad;
 
