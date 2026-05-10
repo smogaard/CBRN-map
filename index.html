@@ -825,8 +825,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   // 2. bygg venstre/høyre FRA center (ikke fra gamle edges)
   const spread = 0.25;
 
-  const leftDir = stepDir - spread;
-  const rightDir = stepDir + spread;
+  const leftDir = stepDir + spread;
+  const rightDir = stepDir - spread;
 
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, hotR);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, hotR);
