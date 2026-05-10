@@ -616,13 +616,14 @@ function updateMap(){
    fillOpacity: 0
  }).addTo(map);
 
- // 🔥 Hent vindretning (fra weather cache senere)
  let windDir = 0;
 
- if(lastWindDir !== undefined){
-   windDir = t0WindDir + 180; // plume går MED vinden
+ if(t0data && t0data.wind_from_direction !== undefined){
+   windDir = t0data.wind_from_direction + 180;
  }
-
+ ``
+console.log("STATIC plume bruker:", windDir);
+	
  // ✳️ lag plume
 
 
@@ -712,14 +713,20 @@ function destination(lat, lon, angle, dist){
 
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
+  if(!windStart){
+  console.warn("Ingen vindretning gitt");
+  return null;
+}
+``
+	
   const rad = Math.PI/180;
   const steps = 20;
   
   // enkel retning
 
-  const d = timeseries[0].data.instant.details;
 
-  const dir = (d.wind_from_direction + 180) * rad;
+
+  const dir = windStart * rad;
 
 
   // to punkter fremover
