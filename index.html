@@ -413,19 +413,22 @@ console.log("t0data (etter):", t0data);
     }
   }
  
+
+
   // oppdater vind
   if(t0data && t0data.wind_from_direction !== undefined){
      t0WindDir = t0data.wind_from_direction;
   }
-  
-  // lag NY plume hvis t0 har verdi
-  if(t0.value){
-    dynamicPlume = createDynamicPlume(
+	 
+console.log("PLUME bruker t0WindDir:", t0WindDir);
+console.log("T0 faktisk:", t0data.wind_from_direction);
+	 
+   dynamicPlume = createDynamicPlume(
        marker.getLatLng(),
        Number(hot.value),
-       data.properties.timeseries,
+       [],
        t0WindDir + 180
-    );
+   );
 	
     // legg til NY plume
     if(dynamicPlume){
