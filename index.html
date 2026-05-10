@@ -345,11 +345,6 @@ console.log("NOW: ", now);
   const t0time = t0.value ? new Date(t0.value) : null;
   const nowTime = new Date();
 
-
-console.log("t0time:", t0time);
-console.log("nowTime:", nowTime);
-console.log("t0data (før):", t0data);
-console.log("NOW: ", now);
 ``
 
   if(t0time){
@@ -391,10 +386,7 @@ console.log("NOW: ", now);
   if(dynamicPlume){
    map.removeLayer(dynamicPlume);
   }
-	 
-console.log("t0data (etter):", t0data);
-
-	 
+		 
   // fallback hvis T=0 ikke finnes
   if(!t0data && !t0.value){
     t0data = data.properties.timeseries[0].data.instant.details;
@@ -720,7 +712,6 @@ function destination(lat, lon, angle, dist){
 
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
-  console.log("hotR inne i plume:", hotR)
   const rad = Math.PI/180;
   const steps = 20;
   
