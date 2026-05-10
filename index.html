@@ -749,7 +749,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   console.warn("Ingen vindretning gitt");
   return null;
 }
-
+``
 	
   const rad = Math.PI/180;
   const steps = 20;
@@ -760,7 +760,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
 
   // to punkter fremover
-  const stepDist = 1500; // meter
+  const step = 1500; // meter
 
   let current = center;
   
@@ -802,36 +802,17 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   let currentLeft = left;
   let currentRight = right;
 
-  for (let i = 0; i < timeseries.length; i++) {
+ for (let i = 0; i < timeseries.length; i++) {
+
   const step = timeseries[i];
 
-
-  // ✅ FRA → TIL (kun her!)
+  // ✅ konverter FRA → TIL
   const stepDir = (step.dir + 180) * Math.PI / 180;
 
-  // fremdrift
+  // ✅ fremdrift
   const dist = Math.max(300, step.speed * 600);
 
-
-  // 🔥 beregn forrige retning
-  const prevDir = i === 0
-    ? dir
-    : (timeseries[i-1].dir + 180) * Math.PI / 180;
-
-  let delta = stepDir - prevDir;
-
-  // normaliser
-  if (delta > Math.PI) delta -= 2*Math.PI;
-  if (delta < -Math.PI) delta += 2*Math.PI;
-
-  const turn = Math.abs(delta);
-
-   // beregn bredden før svingen
-  const dx = currentLeft.lat - currentRight.lat;
-  const dy = currentLeft.lng - currentRight.lng;
-  const width = Math.sqrt(dx*dx + dy*dy);
-
-  // flytt center
+  // flytt center frem
   currentCenter = destination(
     currentCenter.lat,
     currentCenter.lng,
@@ -839,88 +820,21 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     dist
   );
 
-// finn hvilken side som er inner (konkav)
-const turningLeft = delta > 0;
+  // ✅ bredde vokser jevnt
+  const width = hotR + i * step.Speed * 80;
 
-// ---------- LITEN ENDRING ----------
-if (turn < 0.2) {
-
-  const half = width / 2;
-
+  // ✅ sidepunkter bygges rett fra center
   const leftDir = stepDir - Math.PI/2;
   const rightDir = stepDir + Math.PI/2;
 
-  currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, half);
-  currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, half);
+  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-  leftEdge.push([currentLeft.lat, currentLeft.lng]);
-  rightEdge.push([currentRight.lat, currentRight.lng]);
+  leftEdge.push([leftPoint.lat, leftPoint.lng]);
+  rightEdge.push([rightPoint.lat, rightPoint.lng]);
 }
 
-// ---------- STOR ENDRING ----------
-else {
-
-  const segments = 6;
-
-  // ✅ INNERSIDE (konkav) → KNEKK
-  if (turningLeft) {
-
-    // venstre er inner
-    const leftDir = stepDir - Math.PI/2;
-
-    currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width/2);
-    leftEdge.push([currentLeft.lat, currentLeft.lng]);
-
-  } else {
-
-    // høyre er inner
-    const rightDir = stepDir + Math.PI/2;
-
-    currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width/2);
-    rightEdge.push([currentRight.lat, currentRight.lng]);
-  }
-
-// ✅ YTTERSIDE (konveks) → BUE ved å bøye retning (IKKE rotasjon)
-
-for (let s = 1; s <= segments; s++) {
-
-  // gradvis endring i vindretning
-  const interpDir =
-    prevDir + delta * (s / segments);
-
-  const half = width / 2;
-
-  if (turningLeft) {
-
-    // høyre side er ytter
-    const edgeDir = interpDir + Math.PI/2;
-
-    currentRight = destination(
-      currentCenter.lat,
-      currentCenter.lng,
-      edgeDir,
-      half
-    );
-
-    rightEdge.push([currentRight.lat, currentRight.lng]);
-
-  } else {
-
-    // venstre side er ytter
-    const edgeDir = interpDir - Math.PI/2;
-
-    currentLeft = destination(
-      currentCenter.lat,
-      currentCenter.lng,
-      edgeDir,
-      half
-    );
-
-    leftEdge.push([currentLeft.lat, currentLeft.lng]);
-  }
-}
-  }
-}
+																					
 
   return L.polygon([
     ...cap,
