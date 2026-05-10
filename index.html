@@ -439,7 +439,7 @@ async function updateWeather(){
      marker.getLatLng(),
      Number(hot.value),
      windTrack,
-     t0WindDir + 180
+     t0WindDir
   );
 
   if(dynamicPlume){
@@ -806,13 +806,13 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
   const step = timeseries[i];
 
-  const stepDir = (step.dir) * Math.PI / 180;
+  // ✅ konverter FRA → TIL
+  const stepDir = (step.dir + 180) * Math.PI / 180;
 
-  // vindstyrke → avstand
-  const dist = Math.max(300, step.speed * 600) + i * 50;
+  // ✅ fremdrift
+  const dist = Math.max(300, step.speed * 600);
 
-
-  // 1. flytt center langs vinden
+  // flytt center frem
   currentCenter = destination(
     currentCenter.lat,
     currentCenter.lng,
@@ -820,36 +820,19 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     dist
   );
 
-  // 2. bygg venstre/høyre FRA center (ikke fra gamle edges)
-  const spread = 0.25;
+  // ✅ bredde vokser jevnt
+  const width = hotR + i * step.speed * 120;
 
-  // hvor mye vi "retter opp" retning (0–1)
-  const adjust = 0.6;
+  // ✅ sidepunkter bygges rett fra center
+  const leftDir = stepDir - Math.PI/2;
+  const rightDir = stepDir + Math.PI/2;
 
-  // finn retning fra center til nåværende punkt
-  const angleLeft = Math.atan2(
-    currentLeft.lng - currentCenter.lng,
-    currentLeft.lat - currentCenter.lat
-  );
+  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-  const angleRight = Math.atan2(
-    currentRight.lng - currentCenter.lng,
-    currentRight.lat - currentCenter.lat
-  );
-
-  // bland gammel retning og ny vindretning
-  const leftDir = angleLeft * (1 - adjust) + (stepDir + spread) * adjust;
-  const rightDir = angleRight * (1 - adjust) + (stepDir - spread) * adjust;
-
-  // flytt videre
-  currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
-  currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
-
-  // oppdater edges
-  leftEdge.push([currentLeft.lat, currentLeft.lng]);
-  rightEdge.push([currentRight.lat, currentRight.lng]);
-  }
-
+  leftEdge.push([leftPoint.lat, leftPoint.lng]);
+  rightEdge.push([rightPoint.lat, rightPoint.lng]);
+}
 																					
 
   return L.polygon([
