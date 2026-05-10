@@ -880,34 +880,45 @@ else {
     rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
-  // ✅ YTTERSIDE (konveks) → BUE
+  // ✅ YTTERSIDE (konveks) → BUE rundt innerkant
+
+  // finn pivot (innerside før svingen)
+  let pivot;
+
+  if (turningLeft) {
+    pivot = { ...currentLeft };   // venstre er inner
+  } else {
+    pivot = { ...currentRight };  // høyre er inner
+  }
+
   for (let s = 1; s <= segments; s++) {
 
     const interpDir =
       prevDir + delta * (s / segments);
 
-   
-let edgeDir;
+    let angle;
 
-      if (turningLeft) {
-        edgeDir = interpDir + Math.PI/2;
-      } else {
-        edgeDir = interpDir - Math.PI/2;
-      }
-
-      const p = destination(
-        currentCenter.lat,
-        currentCenter.lng,
-        edgeDir,
-        width
-      );
-
-      if (turningLeft) {
-        rightEdge.push([p.lat, p.lng]);
-      } else {
-        leftEdge.push([p.lat, p.lng]);
-      }
+    if (turningLeft) {
+      // høyre er ytter → går i samme retning som interpDir
+      angle = interpDir;
+    } else {
+      // venstre er ytter → motsatt side
+      angle = interpDir + Math.PI;
     }
+  
+    const p = destination(
+      pivot.lat,
+      pivot.lng,
+      angle,
+      width   // ✅ HEL bredde brukes her som radius
+    );
+
+    if (turningLeft) {
+      rightEdge.push([p.lat, p.lng]);
+    } else {
+      leftEdge.push([p.lat, p.lng]);
+    }
+  }  
   }
 }
 
