@@ -295,7 +295,7 @@ async function getHistoricalWeather(lat, lon, time){
     const res = await fetch(url);
     const json = await res.json();
 
-    																				console.log("FROST RAW:", json);
+    																				
 
     if(json.data && json.data.length > 0){
 
@@ -307,7 +307,7 @@ async function getHistoricalWeather(lat, lon, time){
         result[item.elementId] = item.value;
       }
 
-      																				console.log("FROST PARSED:", result);
+      																				
 
       return {
         air_temperature: result.air_temperature,
@@ -317,7 +317,7 @@ async function getHistoricalWeather(lat, lon, time){
     }
 
   } catch(e){
-    																				console.log("Frost error:", e);
+    																				
     return null;
   }
 }
@@ -336,7 +336,7 @@ async function updateWeather(){
   t0data = null;
   ``
 
-  																					console.log("NOW: ", now);
+  																					
 	 
   // ===== Hente historiske værdata =====
 
@@ -391,7 +391,7 @@ async function updateWeather(){
   }
   // fallback hvis ingenting ble funnet
   if(!t0data && t0time){
-   																				console.log("Fallback til forecast for T0");
+   																				
 
     for(const ts of data.properties.timeseries){
       const tsTime = new Date(ts.time);
@@ -455,9 +455,7 @@ async function updateWeather(){
   }
 }
 	 
- 				 																		console.log("VISER I UI for T=0:", t0data);
-	 
-  																						console.log("VISER I UI for Nå:", now);
+ 				 																		
 	 
   //UI (uendret)
   temp_t0.innerHTML = t0data.air_temperature ?? "-";
@@ -472,7 +470,7 @@ async function updateWeather(){
   updateMap();
 
 }catch(e){
-  																						console.log("Weather error:", e);
+  																						
   dynamicPlume = null;
 }
 }  
@@ -652,7 +650,7 @@ function updateMap(){
    windDir = t0data.wind_from_direction + 180;
  }
  ``
-																							console.log("STATIC plume bruker:", windDir);
+																							
 	
  // ✳️ lag plume
 
@@ -748,7 +746,7 @@ function destination(lat, lon, angle, dist){
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
   if(windStart === undefined || windStart === null){
-  																								console.warn("Ingen vindretning gitt");
+  console.warn("Ingen vindretning gitt");
   return null;
 }
 ``
@@ -779,7 +777,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   }
 	
   if(!cap || cap.length === 0){
-    																								console.error("CAP er tom!");
+    																								
     return null;
   }
   
@@ -787,7 +785,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const startRight = cap[cap.length - 1];
 
   if(!startLeft || !startRight){
-    																								console.error("Cap startpunkter er undefined");
+    																								
     return null;
   }
   
@@ -825,27 +823,36 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   // 2. bygg venstre/høyre FRA center (ikke fra gamle edges)
   const spread = 0.25;
 
-  const leftDir = stepDir + spread;
-  const rightDir = stepDir - spread;
+ const spread = 0.25;
 
-  // bredde vokser med tid
-  const width = hotR + i * step.speed * 50;   // 👈 justerbar
+  // hvor mye vi "retter opp" retning (0–1)
+  const adjust = 0.6;
 
+  // finn retning fra center til nåværende punkt
+  const angleLeft = Math.atan2(
+    currentLeft.lng - currentCenter.lng,
+    currentLeft.lat - currentCenter.lat
+  );
 
-  // flytt kanten videre, IKKE fra center
+  const angleRight = Math.atan2(
+    currentRight.lng - currentCenter.lng,
+    currentRight.lat - currentCenter.lat
+  );
+
+  // bland gammel retning og ny vindretning
+  const leftDir = angleLeft * (1 - adjust) + (stepDir + spread) * adjust;
+  const rightDir = angleRight * (1 - adjust) + (stepDir - spread) * adjust;
+
+  // flytt videre
   currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
   currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
-
-  leftEdge.push([currentLeft.lat, currentLeft.lng]);
-  rightEdge.push([currentRight.lat, currentRight.lng]);
-
 
   // oppdater edges
   leftEdge.push([currentLeft.lat, currentLeft.lng]);
   rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
-																					console.log(currentLeft, currentRight)
+																					
 
   return L.polygon([
     ...cap,
