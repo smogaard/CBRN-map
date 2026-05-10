@@ -816,8 +816,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const spread = 0.25;  // justerbar
 
   // bruk vindretningen som base
-  const leftDir = stepDir - spread;
-  const rightDir = stepDir + spread;
+  const leftDir = stepDir + spread;
+  const rightDir = stepDir - spread;
 
   currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
   currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
