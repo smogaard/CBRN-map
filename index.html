@@ -907,15 +907,22 @@ for (let s = 1; s <= segments; s++) {
   const angle = delta * (s / segments);
 
   // lokal rotasjon rundt pivot (flat approx)
-  const dx = startPoint.lat - pivot.lat;
-  const dy = startPoint.lng - pivot.lng;
+const latFactor = Math.cos(pivot.lat * Math.PI / 180);
 
-  const rotatedLat =
-    pivot.lat + dx * Math.cos(angle) - dy * Math.sin(angle);
+// korriger koordinater
+const dx = startPoint.lat - pivot.lat;
+const dy = (startPoint.lng - pivot.lng) * latFactor;
 
-  const rotatedLng =
-    pivot.lng + dx * Math.sin(angle) + dy * Math.cos(angle);
+const rx =
+  dx * Math.cos(angle) - dy * Math.sin(angle);
 
+const ry =
+  dx * Math.sin(angle) + dy * Math.cos(angle);
+
+// tilbake til lat/lng
+const rotatedLat = pivot.lat + rx;
+const rotatedLng = pivot.lng + ry / latFactor;
+	
   if (turningLeft) {
     rightEdge.push([rotatedLat, rotatedLng]);
   } else {
