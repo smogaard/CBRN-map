@@ -891,35 +891,37 @@ else {
     pivot = { ...currentRight };  // høyre er inner
   }
 
-  for (let s = 1; s <= segments; s++) {
+// ✅ BUE: roter ytterpunkt rundt pivot
 
-  const interpDir =
-     prevDir + delta * (s / segments);
+// finn startpunkt (ytterkant før svingen)
+let startPoint;
 
-  // ✅ KANTRETNING = alltid 90 grader på strømretning
-  let edgeDir;
+if (turningLeft) {
+  startPoint = { ...currentRight };   // høyre er ytter
+} else {
+  startPoint = { ...currentLeft };    // venstre er ytter
+}
+
+for (let s = 1; s <= segments; s++) {
+
+  const angle = delta * (s / segments);
+
+  // lokal rotasjon rundt pivot (flat approx)
+  const dx = startPoint.lat - pivot.lat;
+  const dy = startPoint.lng - pivot.lng;
+
+  const rotatedLat =
+    pivot.lat + dx * Math.cos(angle) - dy * Math.sin(angle);
+
+  const rotatedLng =
+    pivot.lng + dx * Math.sin(angle) + dy * Math.cos(angle);
 
   if (turningLeft) {
-  // høyre side = ytter
-    edgeDir = interpDir - Math.PI/2;
+    rightEdge.push([rotatedLat, rotatedLng]);
   } else {
-  // venstre side = ytter
-    edgeDir = interpDir + Math.PI/2;
+    leftEdge.push([rotatedLat, rotatedLng]);
   }
-  
-    const p = destination(
-      pivot.lat,
-      pivot.lng,
-      edgeDir,
-      width   // ✅ HEL bredde brukes her som radius
-    );
-
-    if (turningLeft) {
-      rightEdge.push([p.lat, p.lng]);
-    } else {
-      leftEdge.push([p.lat, p.lng]);
-    }
-  }  
+}  
   }
 }
 
