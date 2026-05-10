@@ -847,8 +847,8 @@ if (turn < 0.2) {
 
   const half = width / 2;
 
-  const leftDir = stepDir + Math.PI/2;
-  const rightDir = stepDir - Math.PI/2;
+  const leftDir = stepDir - Math.PI/2;
+  const rightDir = stepDir + Math.PI/2;
 
   currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, half);
   currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, half);
@@ -893,18 +893,19 @@ else {
 
   for (let s = 1; s <= segments; s++) {
 
-    const interpDir =
-      prevDir + delta * (s / segments);
+  const interpDir =
+     prevDir + delta * (s / segments);
 
-    let angle;
+  // ✅ KANTRETNING = alltid 90 grader på strømretning
+  let edgeDir;
 
-    if (turningLeft) {
-      // høyre er ytter → går i samme retning som interpDir
-      angle = interpDir;
-    } else {
-      // venstre er ytter → motsatt side
-      angle = interpDir + Math.PI;
-    }
+  if (turningLeft) {
+  // høyre side = ytter
+    edgeDir = interpDir + Math.PI/2;
+  } else {
+  // venstre side = ytter
+    edgeDir = interpDir - Math.PI/2;
+  }
   
     const p = destination(
       pivot.lat,
