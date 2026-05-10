@@ -817,6 +817,27 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     dist
   );
 
+
+	 // 🔥 FØRSTE STEG: alltid rett plume (ingen buer)
+  if (i === 0) {
+
+    const leftDir = stepDir - Math.PI/2;
+    const rightDir = stepDir + Math.PI/2;
+
+    const width = hotR + i * step.speed * 80;
+
+    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+
+    currentLeft = leftPoint;
+    currentRight = rightPoint;
+
+    leftEdge.push([leftPoint.lat, leftPoint.lng]);
+    rightEdge.push([rightPoint.lat, rightPoint.lng]);
+
+    // ✅ hopp over resten av koden i denne runden
+    continue;
+  }
   // ✅ bredde vokser jevnt
   const width = hotR + i * step.speed * 80;
 
@@ -834,7 +855,7 @@ let delta = stepDir - prevDir;
 if (delta > Math.PI) delta -= 2*Math.PI;
 if (delta < -Math.PI) delta += 2*Math.PI;
 
-const turn = Math.abs(delta);
+const turn = (i === 0) ? 0 : Math.abs(delta)
 
 const prevWidth = width;
 
