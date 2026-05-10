@@ -806,7 +806,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
   const step = timeseries[i];
 
-  const stepDir = (step.dir + 180) * Math.PI / 180;
+  const stepDir = (step.dir) * Math.PI / 180;
 
   // vindstyrke → avstand
   const dist = Math.max(300, step.speed * 600) + i * 50;
