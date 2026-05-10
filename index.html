@@ -800,6 +800,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const leftEdge = [];
   const rightEdge = [];
 
+  let currentCenter = center;
   let currentLeft = left;
   let currentRight = right;
 
@@ -813,18 +814,27 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const dist = Math.max(500, step.speed * 800);
 
 
-  const spread = 0.25;  // justerbar
+  // 1. flytt center langs vinden
+  currentCenter = destination(
+    currentCenter.lat,
+    currentCenter.lng,
+    stepDir,
+    dist
+  );
 
-  // bruk vindretningen som base
+  // 2. bygg venstre/høyre FRA center (ikke fra gamle edges)
+  const spread = 0.25;
+
   const leftDir = stepDir + spread;
   const rightDir = stepDir - spread;
 
-  currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
-  currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
+  const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, hotR);
+  const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, hotR);
 
-  leftEdge.push([currentLeft.lat, currentLeft.lng]);
-  rightEdge.push([currentRight.lat, currentRight.lng]);
-}
+  // oppdater edges
+  leftEdge.push([newLeft.lat, newLeft.lng]);
+  rightEdge.push([newRight.lat, newRight.lng]);
+  }
 
   return L.polygon([
     ...cap,
