@@ -829,7 +829,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const rightDir = stepDir - spread;
 
   // bredde vokser med tid
-  const width = hotR + i * 150;   // 👈 justerbar
+  const width = hotR + i * step.speed * 50;   // 👈 justerbar
 
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
