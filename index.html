@@ -900,10 +900,10 @@ else {
 
     if (turningLeft) {
       // høyre er ytter → går i samme retning som interpDir
-      angle = interpDir;
+      angle = interpDir + Math.PI;
     } else {
       // venstre er ytter → motsatt side
-      angle = interpDir + Math.PI;
+      angle = interpDir;
     }
   
     const p = destination(
