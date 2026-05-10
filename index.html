@@ -441,6 +441,8 @@ console.log("T0 faktisk:", t0data.wind_from_direction);
         "fra "+windText(t0data.wind_from_direction)+" "+
         (t0data.wind_speed ?? 0).toFixed(1)+" m/s"
       : "-";
+	 
+  updateMap();
 
 }catch(e){
   console.log("Weather error:", e);
@@ -856,8 +858,7 @@ t0.oninput = () =>{
   updateWeather();
  } 
  updateWeather();
- updateMap();
- 
+
 };
 
 hot.oninput = () => {
