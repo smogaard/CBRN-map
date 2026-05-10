@@ -813,22 +813,14 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const dist = Math.max(500, step.speed * 800);
 
 
-// først fremover (midtlinje-retning)
-const forward = stepDir;
+  const spread = 0.25;  // justerbar
 
-// deretter sideveis vinkel
-const spread = 0.3;  // justerbar (≈17°)
+  // bruk vindretningen som base
+  const leftDir = stepDir - spread;
+  const rightDir = stepDir + spread;
 
-// venstre = litt til venstre for forward
-const leftDir = forward + Math.PI/2 + spread;
-
-// høyre = litt til høyre for forward
-const rightDir = forward - Math.PI/2 - spread;
-
-// flytt frem og ut
-currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
-currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
-
+  currentLeft = destination(currentLeft.lat, currentLeft.lng, leftDir, dist);
+  currentRight = destination(currentRight.lat, currentRight.lng, rightDir, dist);
 
   leftEdge.push([currentLeft.lat, currentLeft.lng]);
   rightEdge.push([currentRight.lat, currentRight.lng]);
