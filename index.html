@@ -847,8 +847,8 @@ if (turn < 0.2) {
 
   const half = width / 2;
 
-  const leftDir = stepDir - Math.PI/2;
-  const rightDir = stepDir + Math.PI/2;
+  const leftDir = stepDir + Math.PI/2;
+  const rightDir = stepDir - Math.PI/2;
 
   currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, half);
   currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, half);
@@ -900,10 +900,10 @@ else {
 
     if (turningLeft) {
       // høyre er ytter → går i samme retning som interpDir
-      angle = interpDir + Math.PI;
+      angle = interpDir;
     } else {
       // venstre er ytter → motsatt side
-      angle = interpDir;
+      angle = interpDir + Math.PI;
     }
   
     const p = destination(
