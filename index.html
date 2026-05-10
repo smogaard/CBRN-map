@@ -824,11 +824,80 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const leftDir = stepDir - Math.PI/2;
   const rightDir = stepDir + Math.PI/2;
 
+	 const prevDir = i === 0
+  ? dir
+  : (timeseries[i-1].dir + 180) * Math.PI / 180;
+
+let delta = stepDir - prevDir;
+
+// normaliser
+if (delta > Math.PI) delta -= 2*Math.PI;
+if (delta < -Math.PI) delta += 2*Math.PI;
+
+const turn = Math.abs(delta);
+
+const leftDir = stepDir - Math.PI/2;
+const rightDir = stepDir + Math.PI/2;
+
+const prevWidth = width;
+
+// liten endring → normal utvidelse
+if (turn < 0.2) {
+
   const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
   leftEdge.push([leftPoint.lat, leftPoint.lng]);
   rightEdge.push([rightPoint.lat, rightPoint.lng]);
+
+}
+
+// stor endring → KNEKK + BUE
+else {
+
+  const turningLeft = delta > 0;
+  const segments = 6;
+
+  // ✅ 1. innerkant = knekk
+  if (turningLeft) {
+
+    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    leftEdge.push([leftPoint.lat, leftPoint.lng]);
+
+  } else {
+
+    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+    rightEdge.push([rightPoint.lat, rightPoint.lng]);
+  }
+
+  // ✅ 2. ytterkant = bue
+  const pivot = turningLeft ? currentLeft : currentRight;
+
+  let angleStart = turningLeft
+    ? prevDir + Math.PI/2
+    : prevDir - Math.PI/2;
+
+  for (let s = 1; s <= segments; s++) {
+
+    const angle =
+      delta * (s / segments);
+
+    const theta = angleStart + angle;
+
+    const p = destination(
+      pivot.lat,
+      pivot.lng,
+      theta,
+      prevWidth
+    );
+
+    if (turningLeft) {
+      rightEdge.push([p.lat, p.lng]);
+    } else {
+      leftEdge.push([p.lat, p.lng]);
+    }
+  }
+}
 }
 
 																					
