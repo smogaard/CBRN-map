@@ -334,9 +334,7 @@ async function updateWeather(){
   const now=data.properties.timeseries[0].data.instant.details;
   
   t0data = null;
-  ``
-
-  																					
+   																					
 	 
   // ===== Hente historiske værdata =====
 
@@ -345,8 +343,7 @@ async function updateWeather(){
   const t0time = t0.value ? new Date(t0.value) : null;
   const nowTime = new Date();
 
-  ``
-
+  
   if(t0time){
 
     if(t0time < nowTime){
@@ -649,7 +646,7 @@ function updateMap(){
  if(t0data && t0data.wind_from_direction !== undefined){
    windDir = t0data.wind_from_direction + 180;
  }
- ``
+ 
 																							
 	
  // ✳️ lag plume
@@ -749,7 +746,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   console.warn("Ingen vindretning gitt");
   return null;
 }
-``
+
 	
   const rad = Math.PI/180;
   const steps = 20;
@@ -821,7 +818,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   );
 
   // ✅ bredde vokser jevnt
-  const width = hotR + i * step.Speed * 80;
+  const width = hotR + i * step.speed * 80;
 
   // ✅ sidepunkter bygges rett fra center
   const leftDir = stepDir - Math.PI/2;
