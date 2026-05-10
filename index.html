@@ -842,52 +842,87 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const dy = currentLeft.lng - currentRight.lng;
   const prevWidth = Math.sqrt(dx*dx + dy*dy);
 
-  // ---------- ✅ LITEN VINDENDRING ----------
-  if (turn < 0.2) {
+ // beregn nåværende bredde (før svingen)
+const dx = currentLeft.lat - currentRight.lat;
+const dy = currentLeft.lng - currentRight.lng;
+const width = Math.sqrt(dx*dx + dy*dy);
 
-    const width = hotR + i * 120;
+// flytt center først (alltid)
+currentCenter = destination(
+  currentCenter.lat,
+  currentCenter.lng,
+  stepDir,
+  dist
+);
+
+// ---------- LITEN ENDRING → NORMAL ----------
+if (turn < 0.2) {
+
+  const half = width / 2;
+
+  const leftDir = stepDir - Math.PI/2;
+  const rightDir = stepDir + Math.PI/2;
+
+  currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, half);
+  currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, half);
+
+  leftEdge.push([currentLeft.lat, currentLeft.lng]);
+  rightEdge.push([currentRight.lat, currentRight.lng]);
+
+}
+
+// ---------- STOR ENDRING → KNEKK + BUE ----------
+else {
+
+  // avgjør hvilken side som er inner/ytter
+  const turningLeft = delta > 0;
+
+  const inner = turningLeft ? "left" : "right";
+
+  const segments = 6;
+
+  // 🔥 1. INNERSIDE → KNEKK (kun ett punkt)
+  if (inner === "left") {
 
     const leftDir = stepDir - Math.PI/2;
-    const rightDir = stepDir + Math.PI/2;
 
-    currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-    currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+    currentLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width/2);
 
     leftEdge.push([currentLeft.lat, currentLeft.lng]);
-    rightEdge.push([currentRight.lat, currentRight.lng]);
 
+  } else {
+
+    const rightDir = stepDir + Math.PI/2;
+
+    currentRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width/2);
+
+    rightEdge.push([currentRight.lat, currentRight.lng]);
   }
 
-  // ---------- ✅ STOR VINDENDRING → BUE ----------
-  else {
+  // 🔥 2. YTTERSIDE → BUE
+  for (let s = 1; s <= segments; s++) {
 
-    const segments = 6;
+    const interpDir =
+      prevDir + delta * (s / segments);
 
-    for (let s = 1; s <= segments; s++) {
+    const outerDir = inner === "left"
+      ? interpDir + Math.PI/2
+      : interpDir - Math.PI/2;
 
-      const interpDir =
-        prevDir + delta * (s / segments);
+    const point = destination(
+      currentCenter.lat,
+      currentCenter.lng,
+      outerDir,
+      width
+    );
 
-      currentCenter = destination(
-        currentCenter.lat,
-        currentCenter.lng,
-        interpDir,
-        dist / segments
-      );
-
-      // 🔥 radius = forrige bredde
-      const radius = prevWidth;
-
-      const leftDir = interpDir - Math.PI/2;
-      const rightDir = interpDir + Math.PI/2;
-
-      const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, radius);
-      const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, radius);
-
-      leftEdge.push([leftPoint.lat, leftPoint.lng]);
-      rightEdge.push([rightPoint.lat, rightPoint.lng]);
+    if (inner === "left") {
+      rightEdge.push([point.lat, point.lng]);
+    } else {
+      leftEdge.push([point.lat, point.lng]);
     }
   }
+}
 }
 }
 																					
