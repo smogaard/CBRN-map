@@ -295,7 +295,7 @@ async function getHistoricalWeather(lat, lon, time){
     const res = await fetch(url);
     const json = await res.json();
 
-    console.log("FROST RAW:", json);
+    																				console.log("FROST RAW:", json);
 
     if(json.data && json.data.length > 0){
 
@@ -307,7 +307,7 @@ async function getHistoricalWeather(lat, lon, time){
         result[item.elementId] = item.value;
       }
 
-      console.log("FROST PARSED:", result);
+      																				console.log("FROST PARSED:", result);
 
       return {
         air_temperature: result.air_temperature,
@@ -317,7 +317,7 @@ async function getHistoricalWeather(lat, lon, time){
     }
 
   } catch(e){
-    console.log("Frost error:", e);
+    																				console.log("Frost error:", e);
     return null;
   }
 }
@@ -336,7 +336,7 @@ async function updateWeather(){
   t0data = null;
   ``
 
-  console.log("NOW: ", now);
+  																					console.log("NOW: ", now);
 	 
   // ===== Hente historiske værdata =====
 
@@ -391,7 +391,7 @@ async function updateWeather(){
   }
   // fallback hvis ingenting ble funnet
   if(!t0data && t0time){
-    console.log("Fallback til forecast for T0");
+   																				console.log("Fallback til forecast for T0");
 
     for(const ts of data.properties.timeseries){
       const tsTime = new Date(ts.time);
@@ -455,9 +455,9 @@ async function updateWeather(){
   }
 }
 	 
-  console.log("VISER I UI for T=0:", t0data);
+ 				 																		console.log("VISER I UI for T=0:", t0data);
 	 
-  console.log("VISER I UI for Nå:", now);
+  																						console.log("VISER I UI for Nå:", now);
 	 
   //UI (uendret)
   temp_t0.innerHTML = t0data.air_temperature ?? "-";
@@ -472,7 +472,7 @@ async function updateWeather(){
   updateMap();
 
 }catch(e){
-  console.log("Weather error:", e);
+  																						console.log("Weather error:", e);
   dynamicPlume = null;
 }
 }  
@@ -652,7 +652,7 @@ function updateMap(){
    windDir = t0data.wind_from_direction + 180;
  }
  ``
-console.log("STATIC plume bruker:", windDir);
+																							console.log("STATIC plume bruker:", windDir);
 	
  // ✳️ lag plume
 
@@ -748,7 +748,7 @@ function destination(lat, lon, angle, dist){
 function createDynamicPlume(center, hotR, timeseries, windStart){
 
   if(windStart === undefined || windStart === null){
-  console.warn("Ingen vindretning gitt");
+  																								console.warn("Ingen vindretning gitt");
   return null;
 }
 ``
@@ -779,7 +779,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   }
 	
   if(!cap || cap.length === 0){
-    console.error("CAP er tom!");
+    																								console.error("CAP er tom!");
     return null;
   }
   
@@ -787,7 +787,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const startRight = cap[cap.length - 1];
 
   if(!startLeft || !startRight){
-    console.error("Cap startpunkter er undefined");
+    																								console.error("Cap startpunkter er undefined");
     return null;
   }
   
@@ -797,31 +797,34 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   let left = { lat: cap[0][0], lng: cap[0][1] };
   let right = { lat: cap[cap.length - 1][0], lng: cap[cap.length - 1][1] };
 
-  // fremdrift langs vind
-  let left2  = destination(left.lat, left.lng, dir, 1000);
-  let left3  = destination(left2.lat, left2.lng, dir, 2000);
+  const leftEdge = [];
+  const rightEdge = [];
 
-  let right2 = destination(right.lat, right.lng, dir, 1000);
-  let right3 = destination(right2.lat, right2.lng, dir, 2000);
+  let currentLeft = left;
+  let currentRight = right;
 
-  // bygg kantene riktig retning
-  const leftEdge = [
-    [left3.lat, left3.lng],
-    [left2.lat, left2.lng],
-	[left.lat, left.lng]
-  ];
+  for (let i = 0; i < timeseries.length; i++) {
 
-  const rightEdge = [
-    [right.lat, right.lng],
-    [right2.lat, right2.lng],
-	[right3.lat, right3.lng]
-  ];
+  const step = timeseries[i];
+
+  const stepDir = (step.dir + 180) * Math.PI / 180;
+
+  // vindstyrke → avstand
+  const dist = Math.max(500, step.speed * 800);
+
+  // litt spredning til sidene
+  currentLeft = destination(currentLeft.lat, currentLeft.lng, stepDir - 0.15, dist);
+  currentRight = destination(currentRight.lat, currentRight.lng, stepDir + 0.15, dist);
+
+  leftEdge.push([currentLeft.lat, currentLeft.lng]);
+  rightEdge.push([currentRight.lat, currentRight.lng]);
+}
 
   return L.polygon([
     ...cap,
     ...rightEdge,
-	...leftEdge
-   // 🔥 NØKKELEN
+	...leftEdge.reverse()
+   
   ],{
     color:"#888",
     weight:1.5,
