@@ -749,7 +749,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   console.warn("Ingen vindretning gitt");
   return null;
 }
-``
+
 	
   const rad = Math.PI/180;
   const steps = 20;
@@ -760,7 +760,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
 
   // to punkter fremover
-  const step = 1500; // meter
+  const stepDist = 1500; // meter
 
   let current = center;
   
@@ -910,7 +910,7 @@ else {
     const p = destination(
       pivot.lat,
       pivot.lng,
-      angle,
+      edgeDir,
       width   // ✅ HEL bredde brukes her som radius
     );
 
