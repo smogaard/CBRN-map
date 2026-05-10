@@ -287,23 +287,12 @@ function getDayNight(date,pos){
 5 WEATHER
 ============================= */
       
-  async function getHistoricalWeather(lat, lon, time){
+async function getHistoricalWeather(lat, lon, time){
 
-  const clientId = "c2bde4a4-68bf-46d0-968a-e8c1fb92ee4f";
-  const clientSecret = "030531ed-53a4-49fb-87e0-aec6054faeea";
+  const url = `/api/frost?time=${time.toISOString()}`;
 
-  const url = "https://frost.met.no/observations/v0.jsonld"
-    + "?sources=SN50540"
-    + "&elements=air_temperature,wind_speed,wind_from_direction"
-    + "&referencetime=" + time.toISOString();
-
-  try{
-    const res = await fetch(url, {
-      headers: {
-        "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
-      }
-    });
-
+  try {
+    const res = await fetch(url);
     const json = await res.json();
 
     console.log("FROST RAW:", json);
@@ -331,7 +320,6 @@ function getDayNight(date,pos){
     console.log("Frost error:", e);
     return null;
   }
- }
 }
     
 async function updateWeather(){
