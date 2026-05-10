@@ -415,17 +415,28 @@ console.log("NOW: ", now);
 console.log("PLUME bruker t0WindDir:", t0WindDir);
 console.log("T0 faktisk:", t0data.wind_from_direction);
 	 
-   dynamicPlume = createDynamicPlume(
-       marker.getLatLng(),
-       Number(hot.value),
-       [], // vi bruker ikke timeseries
-       t0WindDir + 180
-   );
-	
-    // legg til NY plume
-    if(dynamicPlume){
-       map.addLayer(dynamicPlume);
-    }
+ if(t0.value){
+
+  dynamicPlume = createDynamicPlume(
+     marker.getLatLng(),
+     Number(hot.value),
+     [],
+     t0WindDir + 180
+  );
+
+  if(dynamicPlume){
+     map.addLayer(dynamicPlume);
+  }
+
+  } else {
+
+  // fjern plume hvis T0 ikke er satt
+  if(dynamicPlume){
+    map.removeLayer(dynamicPlume);
+    dynamicPlume = null;
+  }
+
+}
 
 	 
   console.log("VISER I UI for T=0:", t0data);
