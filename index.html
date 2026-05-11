@@ -851,19 +851,16 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
   const prevWidth = R * c;
 	 
-  // flytt center frem
+
+if (i === 0) {
+
+  // ✅ flytt center frem FØR første snitt
   currentCenter = destination(
     currentCenter.lat,
     currentCenter.lng,
     stepDir,
     dist
   );
-
-	 // 🔥 FØRSTE STEG: alltid rett plume (ingen buer)
-	 
- 
-	 
-if (i === 0) {
 
   const baseDir = dir;
 
@@ -872,7 +869,6 @@ if (i === 0) {
 
   const width = hotR;
 
-  // ✅ kun fra center – IKKE bruk currentLeft/currentRight her
   const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
@@ -883,7 +879,7 @@ if (i === 0) {
   rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
   continue;
-}
+
 
 	 
   // ✅ bredde vokser jevnt
@@ -912,105 +908,52 @@ const dy = currentLeft.lng - currentRight.lng;
 
 if (turn < 0.2) {
 
-  const deltaWidth = width - prevWidth;
+  // ✅ flytt center
+  currentCenter = destination(
+    currentCenter.lat,
+    currentCenter.lng,
+    stepDir,
+    dist
+  );
 
-  // ✅ 1. flytt kantene frem i samme retning som center
-  let newLeft = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
-  let newRight = destination(currentRight.lat, currentRight.lng, stepDir, dist);
+  const width = hotR + Math.sqrt(totalTime) * 20;
 
-  // ✅ 2. utvid litt til siden
-  newLeft = destination(newLeft.lat, newLeft.lng, leftDir, deltaWidth);
-  newRight = destination(newRight.lat, newRight.lng, rightDir, deltaWidth);
+  const leftDir = stepDir - Math.PI / 2;
+  const rightDir = stepDir + Math.PI / 2;
 
-  leftEdge.push([newLeft.lat, newLeft.lng]);
-  rightEdge.push([newRight.lat, newRight.lng]);
+  const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
   currentLeft = newLeft;
   currentRight = newRight;
+
+  leftEdge.push([newLeft.lat, newLeft.lng]);
+  rightEdge.push([newRight.lat, newRight.lng]);
 }
 
-// stor endring → KNEKK + BUE
 else {
 
-  const turningLeft = delta < 0;
-  const segments = 6;
+  // ✅ flytt center
+  currentCenter = destination(
+    currentCenter.lat,
+    currentCenter.lng,
+    stepDir,
+    dist
+  );
 
-  // ✅ 1. innerkant = knekk
-  const deltaWidth = width - prevWidth;
+  const width = hotR + Math.sqrt(totalTime) * 20;
 
-  if (turningLeft) {
+  const leftDir = stepDir - Math.PI / 2;
+  const rightDir = stepDir + Math.PI / 2;
 
-    let newLeft = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
-    newLeft = destination(newLeft.lat, newLeft.lng, leftDir, deltaWidth);
+  const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-    leftEdge.push([newLeft.lat, newLeft.lng]);
-    currentLeft = newLeft;
+  currentLeft = newLeft;
+  currentRight = newRight;
 
-  } else {
-
-    let newRight = destination(currentRight.lat, currentRight.lng, stepDir, dist);
-    newRight = destination(newRight.lat, newRight.lng, rightDir, deltaWidth);
-
-    rightEdge.push([newRight.lat, newRight.lng]);
-    currentRight = newRight;
-  }
-  // ✅ sørg for at left/right ikke har byttet side
-  const dx_lr = currentRight.lng - currentLeft.lng;
-  const dy_lr = currentRight.lat - currentLeft.lat;
-
-  // normal til plume-retningen
-  const nx = Math.cos(stepDir + Math.PI / 2);
-  const ny = Math.sin(stepDir + Math.PI / 2);
-
-  // sjekk hvilken side som faktisk er venstre
-  const dot = dx_lr * nx + dy_lr * ny;
-
-  // hvis feil: bytt
-  if (dot < 0) {
-    const temp = currentLeft;
-    currentLeft = currentRight;
-    currentRight = temp;
-  }
-
-  // ✅ 2. ytterkant = bue
-  const pivot = turningLeft ? prevLeft : prevRight;
-
-  let angleStart = prevDir;
-
-  // ✅ ekte rotasjon rundt pivot
-
-  // startpunkt for ytterkant
-  let startPoint = turningLeft ? prevRight : prevLeft;
-
-  // beregn lokal koordinat (flat approx)
-  const latFactor = Math.cos(pivot.lat * Math.PI / 180);
-
-  const dx0 = startPoint.lat - pivot.lat;
-  const dy0 = (startPoint.lng - pivot.lng) * latFactor;
-
-  for (let s = 1; s <= segments; s++) {
-
-  const angle =
-      (turningLeft ? -Math.abs(delta) : Math.abs(delta)) * (s / segments);
-
-
-  // roter vektor
-  const dx =
-    dx0 * Math.cos(angle) - dy0 * Math.sin(angle);
-
-  const dy =
-    dx0 * Math.sin(angle) + dy0 * Math.cos(angle);
-
-  const lat = pivot.lat + dx;
-  const lng = pivot.lng + dy / latFactor;
-
-  if (turningLeft) {
-    rightEdge.push([lat, lng]);
-    currentRight = { lat, lng };
-  } else {
-    leftEdge.push([lat, lng]);
-    currentLeft = { lat, lng };
-  }
+  leftEdge.push([newLeft.lat, newLeft.lng]);
+  rightEdge.push([newRight.lat, newRight.lng]);
 }
 }
 }
