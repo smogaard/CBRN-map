@@ -960,7 +960,7 @@ const dy = frontRight[1] - frontLeft[1];
 const frontAngle = Math.atan2(dy, dx);
 
 // normal (utover plume)
-const normalAngle = frontAngle + Math.PI / 2;
+const forwardAngle = frontAngle;
 
 
 	
@@ -970,7 +970,7 @@ for (let i = 0; i <= frontSteps; i++) {
   const a = i / frontSteps;
 
   const angle =
-    normalAngle - a * Math.PI/2;
+    forwardAngle - Math.PI/2 + a * Math.PI/2;
 
   const p = destination(
     frontRight[0],
@@ -990,7 +990,7 @@ for (let i = frontSteps; i >= 0; i--) {
   const a = i / frontSteps;
 
   const angle =
-    normalAngle + a * Math.PI/2;
+    forwardAngle + Math.PI/2 - a * Math.PI/2;
 
   const p = destination(
     frontLeft[0],
