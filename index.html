@@ -861,11 +861,9 @@ if (i === 0) {
 
   const width = hotR;
 
-  let leftPoint = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
-  leftPoint = destination(leftPoint.lat, leftPoint.lng, leftDir, deltaWidth);
-
-  let rightPoint = destination(currentRight.lat, currentRight.lng, stepDir, dist);
-  rightPoint = destination(rightPoint.lat, rightPoint.lng, rightDir, deltaWidth);
+  // ✅ kun fra center – IKKE bruk currentLeft/currentRight her
+  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
   currentLeft = leftPoint;
   currentRight = rightPoint;
@@ -875,6 +873,8 @@ if (i === 0) {
 
   continue;
 }
+
+	 
   // ✅ bredde vokser jevnt
   const width = hotR + totalTime * 0.3;
 
@@ -916,12 +916,6 @@ if (turn < 0.2) {
 
   currentLeft = newLeft;
   currentRight = newRight;
-	
-  leftEdge.push([leftPoint.lat, leftPoint.lng]);
-  rightEdge.push([rightPoint.lat, rightPoint.lng]);
-
-  currentLeft = leftPoint;
-  currentRight = rightPoint;
 }
 
 // stor endring → KNEKK + BUE
@@ -935,15 +929,19 @@ else {
 
   if (turningLeft) {
 
-    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
-    leftEdge.push([leftPoint.lat, leftPoint.lng]);
-    currentLeft = leftPoint;
+    let newLeft = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
+    newLeft = destination(newLeft.lat, newLeft.lng, leftDir, deltaWidth);
+
+    leftEdge.push([newLeft.lat, newLeft.lng]);
+    currentLeft = newLeft;
 
   } else {
 
-    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
-    rightEdge.push([rightPoint.lat, rightPoint.lng]);
-    currentRight = rightPoint;
+    let newRight = destination(currentRight.lat, currentRight.lng, stepDir, dist);
+    newRight = destination(newRight.lat, newRight.lng, rightDir, deltaWidth);
+
+    rightEdge.push([newRight.lat, newRight.lng]);
+    currentRight = newRight;
   }
 
   // ✅ 2. ytterkant = bue
@@ -951,21 +949,20 @@ else {
 
   let angleStart = prevDir;
 
-// ✅ ekte rotasjon rundt pivot
+  // ✅ ekte rotasjon rundt pivot
 
-// startpunkt for ytterkant
-let startPoint = turningLeft ? prevRight : prevLeft;
+  // startpunkt for ytterkant
+  let startPoint = turningLeft ? prevRight : prevLeft;
 
-// beregn lokal koordinat (flat approx)
-const latFactor = Math.cos(pivot.lat * Math.PI / 180);
+  // beregn lokal koordinat (flat approx)
+  const latFactor = Math.cos(pivot.lat * Math.PI / 180);
 
-const dx0 = startPoint.lat - pivot.lat;
-const dy0 = (startPoint.lng - pivot.lng) * latFactor;
+  const dx0 = startPoint.lat - pivot.lat;
+  const dy0 = (startPoint.lng - pivot.lng) * latFactor;
 
-for (let s = 1; s <= segments; s++) {
+  for (let s = 1; s <= segments; s++) {
 
-
-    const angle =
+  const angle =
       (turningLeft ? -Math.abs(delta) : Math.abs(delta)) * (s / segments);
 
 
