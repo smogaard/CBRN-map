@@ -814,6 +814,23 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   // ✅ konverter FRA → TIL
   const stepDir = (step.dir + 180) * Math.PI / 180;
 
+  
+  let prevDir = stepDir;
+
+  if (i > 0) {
+    prevDir = (timeseries[i-1].dir + 180) * Math.PI / 180;
+  }
+
+  // beregn retningsendring
+  let delta = stepDir - prevDir;
+
+  // normaliser
+  if (delta > Math.PI) delta -= 2*Math.PI;
+  if (delta < -Math.PI) delta += 2*Math.PI;
+
+  const turn = Math.abs(delta);
+
+  
   // ✅ fremdrift
   // ✅ beregn tidsforskjell mellom punkter
   let dt = 1800; // fallback 30 min
@@ -885,6 +902,33 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   leftEdge.push([newLeft.lat, newLeft.lng]);
   rightEdge.push([newRight.lat, newRight.lng]);
   }
+
+// ✅ hvis stor retningsendring → legg inn bue
+if (turn > 0.2) {
+
+  const segments = 12;
+
+  // pivot = forrige center
+  const pivot = currentCenter;
+
+  for (let s = 1; s <= segments; s++) {
+
+    const t = s / segments;
+
+    const interpDir = prevDir + delta * t;
+
+    const leftDir_i = interpDir - Math.PI / 2;
+    const rightDir_i = interpDir + Math.PI / 2;
+
+    const width_i = hotR + Math.sqrt(totalTime * t) * 20;
+
+    const arcLeft = destination(pivot.lat, pivot.lng, leftDir_i, width_i);
+    const arcRight = destination(pivot.lat, pivot.lng, rightDir_i, width_i);
+
+    leftEdge.push([arcLeft.lat, arcLeft.lng]);
+    rightEdge.push([arcRight.lat, arcRight.lng]);
+  }
+}
 
 	
   // Lage front på plumen	
