@@ -841,8 +841,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
     const baseDir = dir;
 
-    const leftDir = baseDir - Math.PI / 2;
-    const rightDir = baseDir + Math.PI / 2;
+    const leftDir = baseDir + Math.PI / 2;
+    const rightDir = baseDir - Math.PI / 2;
 
     const width = hotR;
 
@@ -872,8 +872,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const width = hotR + Math.sqrt(totalTime) * 20;
 
   // retning ut til sidene
-  const leftDir = stepDir - Math.PI / 2;
-  const rightDir = stepDir + Math.PI / 2;
+  const leftDir = stepDir + Math.PI / 2;
+  const rightDir = stepDir - Math.PI / 2;
 
   // bygg fra center
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
