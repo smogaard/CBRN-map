@@ -919,8 +919,10 @@ const dy0 = (startPoint.lng - pivot.lng) * latFactor;
 
 for (let s = 1; s <= segments; s++) {
 
-  const angle =
-    (turningLeft ? delta : -delta) * (s / segments);
+
+    const angle =
+      (turningLeft ? -Math.abs(delta) : Math.abs(delta)) * (s / segments);
+
 
   // roter vektor
   const dx =
