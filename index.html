@@ -861,8 +861,11 @@ if (i === 0) {
 
   const width = hotR;
 
-  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+  let leftPoint = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
+  leftPoint = destination(leftPoint.lat, leftPoint.lng, leftDir, deltaWidth);
+
+  let rightPoint = destination(currentRight.lat, currentRight.lng, stepDir, dist);
+  rightPoint = destination(rightPoint.lat, rightPoint.lng, rightDir, deltaWidth);
 
   currentLeft = leftPoint;
   currentRight = rightPoint;
@@ -900,9 +903,20 @@ if (turn < 0.2) {
 
   const deltaWidth = width - prevWidth;
 
-  const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
-  const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
+  // ✅ 1. flytt kantene frem i samme retning som center
+  let newLeft = destination(currentLeft.lat, currentLeft.lng, stepDir, dist);
+  let newRight = destination(currentRight.lat, currentRight.lng, stepDir, dist);
 
+  // ✅ 2. utvid litt til siden
+  newLeft = destination(newLeft.lat, newLeft.lng, leftDir, deltaWidth);
+  newRight = destination(newRight.lat, newRight.lng, rightDir, deltaWidth);
+
+  leftEdge.push([newLeft.lat, newLeft.lng]);
+  rightEdge.push([newRight.lat, newRight.lng]);
+
+  currentLeft = newLeft;
+  currentRight = newRight;
+	
   leftEdge.push([leftPoint.lat, leftPoint.lng]);
   rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
