@@ -945,7 +945,24 @@ if (turn > 0.2) {
   const frontAngle = Math.atan2(dy, dx);
   const centerDir = frontAngle - Math.PI / 2;
 
-  const finalWidth = hotR + Math.sqrt(totalTime) * 2
+  const dx_end = frontRight[0] - frontLeft[0];
+  const dy_end = frontRight[1] - frontLeft[1];
+
+  // konverter til meter (samme som tidligere)
+  const dLat = dx_end * Math.PI / 180;
+  const dLng = dy_end * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(frontLeft[0] * Math.PI/180) *
+    Math.cos(frontRight[0] * Math.PI/180) *
+    Math.sin(dLng/2)**2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const R = 6378137;
+
+  const finalWidth = (R * c) / 2;  // halv bredde (radius ut fra centerlinje)
+
 	
   const centerRight = destination(
     frontRight[0],
