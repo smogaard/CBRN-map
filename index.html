@@ -869,7 +869,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   );
 
   // bredde
-  const width = hotR + Math.sqrt(totalTime) * 20;
+  const width = hotR + Math.sqrt(i * dt) * 20;
 
   // retning ut til sidene
   const leftDir = stepDir - Math.PI / 2;
