@@ -860,15 +860,16 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     if (i > 0) {
       const prevTime = new Date(timeseries[i-1].time);
       const currTime = new Date(step.time);
-      totalTime += (currTime - prevTime) / 1000; // sekunder
+      totalTime += (currTime - prevTime) / 1000;
     }
 
-    // ✅ bredde = vokser med tid, ikke steg
-    const width = hotR + totalTime * 0.5
-    ;
+    const width = hotR + totalTime * 0.3;
 
-    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+
+    const deltaWidth = width - prevWidth;
+
+    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
+    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
 
     currentLeft = leftPoint;
     currentRight = rightPoint;
