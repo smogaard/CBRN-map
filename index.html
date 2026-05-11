@@ -885,6 +885,9 @@ if (turn < 0.2) {
   leftEdge.push([leftPoint.lat, leftPoint.lng]);
   rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
+  // ✅ KRITISK: oppdater state
+  currentLeft = leftPoint;
+  currentRight = rightPoint;
 }
 
 // stor endring → KNEKK + BUE
