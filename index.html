@@ -852,29 +852,26 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 	 
  
 	 
-  if (i === 0) {
+if (i === 0) {
 
-    const baseDir = dir;
+  const baseDir = dir;
 
-    const leftDir = baseDir - Math.PI / 2;
-    const rightDir = baseDir + Math.PI / 2;
+  const leftDir = baseDir - Math.PI / 2;
+  const rightDir = baseDir + Math.PI / 2;
 
-    const width = hotR;
+  const width = hotR;
 
-    const deltaWidth = width - prevWidth;
+  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
-    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
+  currentLeft = leftPoint;
+  currentRight = rightPoint;
 
+  leftEdge.push([leftPoint.lat, leftPoint.lng]);
+  rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
-    currentLeft = leftPoint;
-    currentRight = rightPoint;
-
-    leftEdge.push([leftPoint.lat, leftPoint.lng]);
-    rightEdge.push([rightPoint.lat, rightPoint.lng]);
-
-    continue;
-  }
+  continue;
+}
   // ✅ bredde vokser jevnt
   const width = hotR + totalTime * 0.3;
 
