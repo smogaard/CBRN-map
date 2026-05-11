@@ -1059,6 +1059,47 @@ rightEdge.push([newRight.lat, newRight.lng]);
       fillColor:"#666"
     });
   }
+
+	function createStaticNowPlume(center, hotR, warmR, windDeg){
+
+  const lat = center.lat;
+  const lon = center.lng;
+
+  const rad = Math.PI/180;
+  const steps = 20;
+
+  const points = [];
+
+  const wind = windDeg * rad;
+
+  // ✅ halvsirkel (samme som før)
+  for(let i = 0; i <= steps; i++){
+    const a = wind - Math.PI/2 + (i/steps)*Math.PI;
+    const p = destination(lat, lon, a, hotR);
+    points.push([p.lat, p.lng]);
+  }
+
+  // ✅ ytterbue
+  const outer = [];
+  for(let i = 0; i <= steps; i++){
+    const a = wind - 0.5 + (i/steps)*1.0;
+    const p = destination(lat, lon, a, warmR);
+    outer.push([p.lat, p.lng]);
+  }
+
+  // legg til ytterbue baklengs
+  for(let i = outer.length - 1; i >= 0; i--){
+    points.push(outer[i]);
+  }
+
+  return L.polygon(points,{
+    color:"#cccc66",        // ✅ lysegul kant
+    fillColor:"#ffff99",    // ✅ lysegul fyll
+    fillOpacity:0.4
+  });
+}
+
+	
 /* =============================
 11 CLICK
 ============================= */
