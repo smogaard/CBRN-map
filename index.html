@@ -958,11 +958,9 @@ const dx = frontRight[0] - frontLeft[0];
 const dy = frontRight[1] - frontLeft[1];
 
 const frontAngle = Math.atan2(dy, dx);
+const centerDir = frontAngle - Math.PI / 2;
 
-// normal (utover plume)
-const forwardAngle = frontAngle;
-
-
+	
 const centerRight = destination(
   frontRight[0],
   frontRight[1],
