@@ -945,6 +945,7 @@ if (turn > 0.2) {
   const frontAngle = Math.atan2(dy, dx);
   const centerDir = frontAngle - Math.PI / 2;
 
+  const finalWidth = hotR + Math.sqrt(totalTime) * 2
 	
   const centerRight = destination(
     frontRight[0],
