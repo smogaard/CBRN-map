@@ -944,13 +944,67 @@ for (let s = 1; s <= segments; s++) {
 }
 }
 }
+const frontRight = rightEdge[rightEdge.length - 1];
+const frontLeft = leftEdge[leftEdge.length - 1];
+const frontPoints = [];
 
-																					
+const steps = 10; // glatthet
 
-  return L.polygon([
-    ...cap,
-    ...rightEdge,
-	...leftEdge.reverse()
+// retning langs front (fra venstre til høyre)
+const dx = frontRight[0] - frontLeft[0];
+const dy = frontRight[1] - frontLeft[1];
+
+const length = Math.sqrt(dx*dx + dy*dy);
+
+// normal (utover fra plume)
+const nx = -dy / length;
+const ny = dx / length;
+
+
+	
+for (let i = 0; i <= steps; i++) {
+  const a = (i / steps) * Math.PI / 2;
+
+  const x =
+    frontRight[0] +
+    nx * Math.cos(a) * hotR +
+    (dx / length) * Math.sin(a) * hotR;
+
+  const y =
+    frontRight[1] +
+    ny * Math.cos(a) * hotR +
+    (dy / length) * Math.sin(a) * hotR;
+
+  frontPoints.push([x, y]);
+}
+
+
+
+for (let i = steps; i >= 0; i--) {
+  const a = (i / steps) * Math.PI / 2;
+
+  const x =
+    frontLeft[0] +
+    nx * Math.cos(a) * hotR -
+    (dx / length) * Math.sin(a) * hotR;
+
+  const y =
+    frontLeft[1] +
+    ny * Math.cos(a) * hotR -
+    (dy / length) * Math.sin(a) * hotR;
+
+  frontPoints.push([x, y]);
+}
+
+	
+
+
+return L.polygon([
+  ...cap,
+  ...rightEdge.slice(0, -1),   // fjern siste punkt
+  ...frontPoints,
+  ...leftEdge.slice(0, -1).reverse()
+
    
   ],{
     color:"#888",
