@@ -906,31 +906,40 @@ else {
 
   let angleStart = prevDir;
 
-  for (let s = 1; s <= segments; s++) {
+// ✅ ekte rotasjon rundt pivot
 
-    const angle =
-      (turningLeft ? -delta : delta) * (s / segments);
+// startpunkt for ytterkant
+let startPoint = turningLeft ? prevRight : prevLeft;
 
-    const theta = angleStart + angle;
+// beregn lokal koordinat (flat approx)
+const latFactor = Math.cos(pivot.lat * Math.PI / 180);
 
-    // 🔥 start fra forrige ytterpunkt og roter derfra
-    const startPoint = turningLeft ? prevRight : prevLeft;
+const dx0 = startPoint.lat - pivot.lat;
+const dy0 = (startPoint.lng - pivot.lng) * latFactor;
 
-    const p = destination(
-      startPoint.lat,
-      startPoint.lng,
-      theta,
-      prevWidth
-    );
+for (let s = 1; s <= segments; s++) {
 
-    if (turningLeft) {
-      rightEdge.push([p.lat, p.lng]);
-	  currentRight = { lat: p.lat, lng: p.lng };  
-    } else {
-      leftEdge.push([p.lat, p.lng]);
-	  currentLeft = { lat: p.lat, lng: p.lng }
-    }
+  const angle =
+    (turningLeft ? -delta : delta) * (s / segments);
+
+  // roter vektor
+  const dx =
+    dx0 * Math.cos(angle) - dy0 * Math.sin(angle);
+
+  const dy =
+    dx0 * Math.sin(angle) + dy0 * Math.cos(angle);
+
+  const lat = pivot.lat + dx;
+  const lng = pivot.lng + dy / latFactor;
+
+  if (turningLeft) {
+    rightEdge.push([lat, lng]);
+    currentRight = { lat, lng };
+  } else {
+    leftEdge.push([lat, lng]);
+    currentLeft = { lat, lng };
   }
+}
 }
 }
 
