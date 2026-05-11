@@ -852,28 +852,15 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 	 
   if (i === 0) {
 
-    // ✅ BRUK T0-retning, ikke stepDir
-    const baseDir = dir;  // dir = windStart (allerede riktig!)
+    const baseDir = dir;
 
-    const leftDir = baseDir - Math.PI/2;
-    const rightDir = baseDir + Math.PI/2;
-    
-    // ✅ akkumulert tid
-    
+    const leftDir = baseDir - Math.PI / 2;
+    const rightDir = baseDir + Math.PI / 2;
 
-    if (i > 0) {
-      const prevTime = new Date(timeseries[i-1].time);
-      const currTime = new Date(step.time);
-      totalTime += (currTime - prevTime) / 1000;
-    }
+    const width = hotR;
 
-    const width = hotR + totalTime * 0.3;
-
-
-    const deltaWidth = width - prevWidth;
-
-    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
-    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
+    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
     currentLeft = leftPoint;
     currentRight = rightPoint;
@@ -881,7 +868,6 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     leftEdge.push([leftPoint.lat, leftPoint.lng]);
     rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
-    // ✅ hopp over resten av koden i denne runden
     continue;
   }
   // ✅ bredde vokser jevnt
