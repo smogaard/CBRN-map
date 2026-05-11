@@ -425,12 +425,11 @@ for (const ts of data.properties.timeseries){
       time: ts.time
     });
   }
-	
-  if (windTrack.length < 2) return;
-  if (windTrack.length >= Math.ceil(elapsedHours * 2)) break; // gir  2 steg i hver påløpte time siden hendelsen
+
+  if (windTrack.length >= Math.ceil(elapsedHours * 2)) break;
 }
 
-// ✅ legg til T0 én gang
+// ✅ legg til T0 én gang (ETTER loopen)
 windTrack.unshift({
   dir: t0data.wind_from_direction,
   speed: t0data.wind_speed,
