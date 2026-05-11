@@ -399,7 +399,11 @@ async function updateWeather(){
       }
     }
   }
- 
+	 
+  const elapsedHours = t0time
+    ? Math.max(1, (nowTime - t0time) / (1000 * 60 * 60))
+    : 1;
+
   // oppdater vind
   if(t0data && t0data.wind_from_direction !== undefined){
      t0WindDir = t0data.wind_from_direction;
@@ -427,7 +431,7 @@ async function updateWeather(){
       });
     }
 
-    if (windTrack.length >= 6) break; // begrens lengde
+    if (windTrack.length >= Math.ceil(elapsedHours * 2)) break; // gir  2 steg i hver påløpte time siden hendelsen
   }
 	  
 																						console.log("windTrack:", windTrack)
