@@ -161,7 +161,7 @@ Hvor langt frem vil du estimere:
 const map = L.map('map').setView([60.39,5.32],13);
 L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png").addTo(map);
 
-let marker, hotCircle, warmCircle, plume;
+let marker, hotCircle, warmCircle, plume, plumeNow;
 let lastWindDir = 0;
 let locked = false;
 let forecastHours = 1;
