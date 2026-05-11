@@ -830,85 +830,38 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   // ✅ distanse = fart * tid
   const dist = step.speed * dt;
 
+  if (i === 0) {
 
-  // 🔥 lagre gamle kantpunkter før oppdatering
-  const prevLeft = { ...currentLeft };
-  const prevRight = { ...currentRight };
+    // ✅ flytt center frem FØR første snitt
+    currentCenter = destination(
+      currentCenter.lat,
+      currentCenter.lng,
+      stepDir,
+      dist
+    );
 
-  // ✅ beregn riktig bredde fra disse
-  const dLat = (prevLeft.lat - prevRight.lat) * Math.PI / 180;
-  const dLng = (prevLeft.lng - prevRight.lng) * Math.PI / 180;
+    const baseDir = dir;
 
-  const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(prevLeft.lat * Math.PI/180) *
-    Math.cos(prevRight.lat * Math.PI/180) *
-    Math.sin(dLng/2)**2;
+    const leftDir = baseDir - Math.PI / 2;
+    const rightDir = baseDir + Math.PI / 2;
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const width = hotR;
 
-  const R = 6378137;
+    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-  const prevWidth = R * c;
-	 
+    currentLeft = leftPoint;
+    currentRight = rightPoint;
 
-if (i === 0) {
-
-  // ✅ flytt center frem FØR første snitt
-  currentCenter = destination(
-    currentCenter.lat,
-    currentCenter.lng,
-    stepDir,
-    dist
-  );
-
-  const baseDir = dir;
-
-  const leftDir = baseDir - Math.PI / 2;
-  const rightDir = baseDir + Math.PI / 2;
-
-  const width = hotR;
-
-  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
-
-  currentLeft = leftPoint;
-  currentRight = rightPoint;
-
-  leftEdge.push([leftPoint.lat, leftPoint.lng]);
-  rightEdge.push([rightPoint.lat, rightPoint.lng]);
+    leftEdge.push([leftPoint.lat, leftPoint.lng]);
+    rightEdge.push([rightPoint.lat, rightPoint.lng]);
 
   continue;
 
+  }
+  // ✅ NORMAL CASE (i > 0)
 
-	 
-  // ✅ bredde vokser jevnt
-  const width = hotR + Math.sqrt(totalTime) * 20;
-
-  // ✅ sidepunkter bygges rett fra center
-  const leftDir = stepDir - Math.PI/2;
-  const rightDir = stepDir + Math.PI/2;
-
-	 const prevDir = i === 0
-  ? dir
-  : (timeseries[i-1].dir + 180) * Math.PI / 180;
-
-let delta = stepDir - prevDir;
-
-// normaliser
-if (delta > Math.PI) delta -= 2*Math.PI;
-if (delta < -Math.PI) delta += 2*Math.PI;
-
-const turn = (i === 0) ? 0 : Math.abs(delta)
-const dx = currentLeft.lat - currentRight.lat;
-const dy = currentLeft.lng - currentRight.lng;
-
-
-// liten endring → normal utvidelse
-
-if (turn < 0.2) {
-
-  // ✅ flytt center
+  // flytt center
   currentCenter = destination(
     currentCenter.lat,
     currentCenter.lng,
@@ -916,11 +869,14 @@ if (turn < 0.2) {
     dist
   );
 
+  // bredde
   const width = hotR + Math.sqrt(totalTime) * 20;
 
+  // retning ut til sidene
   const leftDir = stepDir - Math.PI / 2;
   const rightDir = stepDir + Math.PI / 2;
 
+  // bygg fra center
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
@@ -929,126 +885,99 @@ if (turn < 0.2) {
 
   leftEdge.push([newLeft.lat, newLeft.lng]);
   rightEdge.push([newRight.lat, newRight.lng]);
-}
-
-else {
-
-  // ✅ flytt center
-  currentCenter = destination(
-    currentCenter.lat,
-    currentCenter.lng,
-    stepDir,
-    dist
-  );
-
-  const width = hotR + Math.sqrt(totalTime) * 20;
-
-  const leftDir = stepDir - Math.PI / 2;
-  const rightDir = stepDir + Math.PI / 2;
-
-  const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-  const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
-
-  currentLeft = newLeft;
-  currentRight = newRight;
-
-  leftEdge.push([newLeft.lat, newLeft.lng]);
-  rightEdge.push([newRight.lat, newRight.lng]);
-}
-}
-}
+  }
 
 	
-// Lage front på plumen	
-const frontRight = rightEdge[rightEdge.length - 1];
-const frontLeft = leftEdge[leftEdge.length - 1];
-const frontPoints = [];
+  // Lage front på plumen	
+  const frontRight = rightEdge[rightEdge.length - 1];
+  const frontLeft = leftEdge[leftEdge.length - 1];
+  const frontPoints = [];
 
-const frontSteps = 10;
+  const frontSteps = 10;
 
-// retning langs front (fra left → right)
-const dx = frontRight[0] - frontLeft[0];
-const dy = frontRight[1] - frontLeft[1];
+  // retning langs front (fra left → right)
+  const dx = frontRight[0] - frontLeft[0];
+  const dy = frontRight[1] - frontLeft[1];
 
-const frontAngle = Math.atan2(dy, dx);
-const centerDir = frontAngle - Math.PI / 2;
-
-	
-const centerRight = destination(
-  frontRight[0],
-  frontRight[1],
-  centerDir,
-  hotR
-);
-
-const centerLeft = destination(
-  frontLeft[0],
-  frontLeft[1],
-  centerDir,
-  hotR
-);
+  const frontAngle = Math.atan2(dy, dx);
+  const centerDir = frontAngle - Math.PI / 2;
 
 	
-// Høyre Kvartbue
-for (let i = 0; i <= frontSteps; i++) {
-
-  const a = i / frontSteps;
-
-  const angle =
-    centerDir + Math.PI/2 - a * Math.PI/2;
-
-
-  const p = destination(
-    centerRight.lat,
-    centerRight.lng,
-    angle,
+  const centerRight = destination(
+    frontRight[0],
+    frontRight[1],
+    centerDir,
     hotR
   );
 
-  frontPoints.push([p.lat, p.lng]);
-}
+  const centerLeft = destination(
+    frontLeft[0],
+    frontLeft[1],
+    centerDir,
+    hotR
+  );
+
+	
+  // Høyre Kvartbue
+  for (let i = 0; i <= frontSteps; i++) {
+  
+    const a = i / frontSteps;
+ 
+    const angle =
+      centerDir + Math.PI/2 - a * Math.PI/2;
+
+
+    const p = destination(
+      centerRight.lat,
+      centerRight.lng,
+      angle,
+      hotR
+    );
+
+    frontPoints.push([p.lat, p.lng]);
+  }
 
 
 	
-// Venstre kvartbue
-for (let i = frontSteps; i >= 0; i--) {
+  // Venstre kvartbue
+  for (let i = frontSteps; i >= 0; i--) {
 
-  const a = i / frontSteps;
+    const a = i / frontSteps;
 
   
-  const angle =
-    centerDir - Math.PI/2 + a * Math.PI/2;
+    const angle =
+      centerDir - Math.PI/2 + a * Math.PI/2;
 
 
-  const p = destination(
-    centerLeft.lat,
-    centerLeft.lng,
-    angle,
-    hotR
-  );
+    const p = destination(
+      centerLeft.lat,
+      centerLeft.lng,
+      angle,
+      hotR
+    );
 
-  frontPoints.push([p.lat, p.lng]);
-}
+    frontPoints.push([p.lat, p.lng]);
+  }
 	
 
 
 
-return L.polygon([
-  ...cap,
-  ...rightEdge.slice(0, -1),   // fjern siste punkt
-  ...frontPoints,
-  ...leftEdge.slice(0, -1).reverse()
-
+  return L.polygon([
+    ...cap,
+    ...rightEdge.slice(0, -1),   // fjern siste punkt
+    ...frontPoints,
+    ...leftEdge.slice(0, -1).reverse()
+  
    
-  ],{
-    color:"#888",
-    weight:1.5,
-    dashArray:"4,8",
-    fill:true,
-    fillOpacity:0.15,
-    fillColor:"#666"
-  });
-}
+    ],{
+      color:"#888",
+      weight:1.5,
+      dashArray:"4,8",
+      fill:true,
+      fillOpacity:0.15,
+      fillColor:"#666"
+    });
+  }
 /* =============================
 11 CLICK
 ============================= */
