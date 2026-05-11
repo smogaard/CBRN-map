@@ -424,7 +424,15 @@ async function updateWeather(){
         speed: ts.data.instant.details.wind_speed
       });
     }
+  
+    // 🔥 sørg for at første punkt = eksakt T0
+    windTrack.unshift({
+      dir: t0data.wind_from_direction,
+      speed: t0data.wind_speed
+    });
+    if (windTrack.length < 2) return;
 
+	  
     if (windTrack.length >= Math.ceil(elapsedHours * 2)) break; // gir  2 steg i hver påløpte time siden hendelsen
   }
 	  
