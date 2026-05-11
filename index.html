@@ -887,7 +887,7 @@ if (i === 0) {
 
 	 
   // ✅ bredde vokser jevnt
-  const width = hotR + totalTime * 0.3;
+  const width = hotR + Math.sqrt(totalTime) * 20;
 
   // ✅ sidepunkter bygges rett fra center
   const leftDir = stepDir - Math.PI/2;
