@@ -963,18 +963,36 @@ const frontAngle = Math.atan2(dy, dx);
 const forwardAngle = frontAngle;
 
 
+const centerRight = destination(
+  frontRight[0],
+  frontRight[1],
+  centerDir,
+  hotR
+);
+
+const centerLeft = destination(
+  frontLeft[0],
+  frontLeft[1],
+  centerDir,
+  hotR
+);
+
 	
 // Høyre Kvartbue
 for (let i = 0; i <= frontSteps; i++) {
 
   const a = i / frontSteps;
 
-  const angle =
-    forwardAngle + Math.PI/2 - a * Math.PI/2;
+  const baseAngle = Math.atan2(
+    frontRight[0] - centerRight.lat,
+    frontRight[1] - centerRight.lng
+  );
+
+  const angle = baseAngle + a * Math.PI / 2;
 
   const p = destination(
-    frontRight[0],
-    frontRight[1],
+    centerRight.lat,
+    centerRight.lng,
     angle,
     hotR
   );
@@ -989,20 +1007,22 @@ for (let i = frontSteps; i >= 0; i--) {
 
   const a = i / frontSteps;
 
-  const angle =
-    forwardAngle - Math.PI/2 - a * Math.PI/2;
+  const baseAngle = Math.atan2(
+    frontLeft[0] - centerLeft.lat,
+    frontLeft[1] - centerLeft.lng
+  );
+
+  const angle = baseAngle - a * Math.PI / 2;
 
   const p = destination(
-    frontLeft[0],
-    frontLeft[1],
+    centerLeft.lat,
+    centerLeft.lng,
     angle,
     hotR
   );
 
   frontPoints.push([p.lat, p.lng]);
 }
-``	
-
 	
 
 
