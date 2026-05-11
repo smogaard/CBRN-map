@@ -806,7 +806,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   let currentLeft = left;
   let currentRight = right;
 
-
+  let totalTime = 0;
 
  for (let i = 0; i < timeseries.length; i++) {
 
@@ -825,6 +825,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   dt = (currTime - prevTime) / 1000; // sekunder
   }
 
+  totalTime += dt;
+	 
   // ✅ distanse = fart * tid
   const dist = step.speed * dt;
 
@@ -848,7 +850,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
 	 // 🔥 FØRSTE STEG: alltid rett plume (ingen buer)
 	 
-  let totalTime = 0;
+ 
 	 
   if (i === 0) {
 
@@ -859,8 +861,11 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
     const width = hotR;
 
-    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+    const deltaWidth = width - prevWidth;
+
+    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
+    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
+
 
     currentLeft = leftPoint;
     currentRight = rightPoint;
