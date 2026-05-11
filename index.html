@@ -836,9 +836,20 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const prevRight = { ...currentRight };
 
   // ✅ beregn riktig bredde fra disse
-  const dx_prev = prevLeft.lat - prevRight.lat;
-  const dy_prev = prevLeft.lng - prevRight.lng;
-  const prevWidth = Math.sqrt(dx_prev*dx_prev + dy_prev*dy_prev);
+  const dLat = (prevLeft.lat - prevRight.lat) * Math.PI / 180;
+  const dLng = (prevLeft.lng - prevRight.lng) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(prevLeft.lat * Math.PI/180) *
+    Math.cos(prevRight.lat * Math.PI/180) *
+    Math.sin(dLng/2)**2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  const R = 6378137;
+
+  const prevWidth = R * c;
 	 
   // flytt center frem
   currentCenter = destination(
