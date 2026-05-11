@@ -815,7 +815,18 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const stepDir = (step.dir + 180) * Math.PI / 180;
 
   // ✅ fremdrift
-  const dist = Math.max(300, step.speed * 600);
+  // ✅ beregn tidsforskjell mellom punkter
+  let dt = 1800; // fallback 30 min
+
+  if (i > 0) {
+    const prevTime = new Date(timeseries[i-1].time);
+    const currTime = new Date(timeseries[i].time);
+  dt = (currTime - prevTime) / 1000; // sekunder
+  }
+
+  // ✅ distanse = fart * tid
+  const dist = step.speed * dt;
+
 
   // 🔥 lagre gamle kantpunkter før oppdatering
   const prevLeft = { ...currentLeft };
