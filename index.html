@@ -915,9 +915,12 @@ else {
 
     const theta = angleStart + angle;
 
+    // 🔥 start fra forrige ytterpunkt og roter derfra
+    const startPoint = turningLeft ? prevRight : prevLeft;
+
     const p = destination(
-      pivot.lat,
-      pivot.lng,
+      startPoint.lat,
+      startPoint.lng,
       theta,
       prevWidth
     );
