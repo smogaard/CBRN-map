@@ -497,7 +497,7 @@ function windArrow(deg){
     <svg ="20" height="20" viewBox="0 0 24 24">
       <path d="M12 2 L12 20 M12 2 L6 8 M12 2 L18 8"
         stroke="black"
-        stroke-width="2"
+        stroke-="2"
         fill="none"/>
     </svg>
   </span>`;
@@ -844,7 +844,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     const leftDir = baseDir - Math.PI / 2;
     const rightDir = baseDir + Math.PI / 2;
 
-    const width = hotR;
+    const width = hotR + Math.sqrt(dt) * 20;
 
     const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
     const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
