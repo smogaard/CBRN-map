@@ -893,6 +893,10 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const rightDir = stepDir + Math.PI / 2;
 
   // bygg fra center
+  
+  const prevLeftPt = { ...currentLeft };
+  const prevRightPt = { ...currentRight };
+	 
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
@@ -911,10 +915,10 @@ if (turn > 0.2) {
   const turningLeft = delta < 0;
 
   // ✅ konkav side (pivot)
-  const pivot = turningLeft ? currentLeft : currentRight;
+  const pivot = turningLeft ? prevLeftPt : prevRightPt;
 
   // ✅ startpunkt for ytterkant (før sving)
-  const startPoint = turningLeft ? currentRight : currentLeft;
+  const startPoint = turningLeft ? prevRightPt : prevLeftPt;
 
   // konverter til lokalt plan
   const latFactor = Math.cos(pivot.lat * Math.PI / 180);
