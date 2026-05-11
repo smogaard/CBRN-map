@@ -948,7 +948,7 @@ const frontRight = rightEdge[rightEdge.length - 1];
 const frontLeft = leftEdge[leftEdge.length - 1];
 const frontPoints = [];
 
-const steps = 10; // glatthet
+const frontSteps = 10; // glatthet
 
 // retning langs front (fra venstre til høyre)
 const dx = frontRight[0] - frontLeft[0];
@@ -962,8 +962,8 @@ const ny = dx / length;
 
 
 	
-for (let i = 0; i <= steps; i++) {
-  const a = (i / steps) * Math.PI / 2;
+for (let i = 0; i <= frontSteps; i++) {
+  const a = (i / frontSteps) * Math.PI / 2;
 
   const x =
     frontRight[0] +
@@ -980,8 +980,8 @@ for (let i = 0; i <= steps; i++) {
 
 
 
-for (let i = steps; i >= 0; i--) {
-  const a = (i / steps) * Math.PI / 2;
+for (let i = frontSteps; i >= 0; i--) {
+  const a = (i / frontSteps) * Math.PI / 2;
 
   const x =
     frontLeft[0] +
