@@ -917,17 +917,19 @@ else {
   const segments = 6;
 
   // ✅ 1. innerkant = knekk
+  const deltaWidth = width - prevWidth;
+
   if (turningLeft) {
 
-    const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
+    const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
     leftEdge.push([leftPoint.lat, leftPoint.lng]);
+    currentLeft = leftPoint;
 
   } else {
 
-    const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+    const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
     rightEdge.push([rightPoint.lat, rightPoint.lng]);
-	  
-	  
+    currentRight = rightPoint;
   }
 
   // ✅ 2. ytterkant = bue
