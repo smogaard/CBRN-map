@@ -921,7 +921,7 @@ if (turn > 0.2) {
     const t = s / segments;
 
     const angle =
-      (turningLeft ? Math.abs(delta) : -Math.abs(delta)) * t;
+      (turningLeft ? Math.abs(delta) : Math.abs(delta)) * t;
 
     const dx =
       dx0 * Math.cos(angle) - dy0 * Math.sin(angle);
