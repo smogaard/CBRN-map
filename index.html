@@ -981,10 +981,13 @@ for (let i = 0; i <= frontSteps; i++) {
 
   const a = i / frontSteps;
 
-  const baseAngle = Math.atan2(
+  const radiusAngle = Math.atan2(
     frontRight[0] - centerRight.lat,
     frontRight[1] - centerRight.lng
   );
+
+  // ✅ tangent = radius + 90°
+  const baseAngle = radiusAngle + Math.PI / 2;
 
   const angle = baseAngle + a * Math.PI / 2;
 
@@ -1005,10 +1008,13 @@ for (let i = frontSteps; i >= 0; i--) {
 
   const a = i / frontSteps;
 
-  const baseAngle = Math.atan2(
+  const radiusAngle = Math.atan2(
     frontLeft[0] - centerLeft.lat,
     frontLeft[1] - centerLeft.lng
   );
+
+  // ✅ tangent = radius - 90°
+  const baseAngle = radiusAngle - Math.PI / 2;
 
   const angle = baseAngle - a * Math.PI / 2;
 
