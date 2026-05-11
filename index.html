@@ -31,7 +31,7 @@ body { margin:0; }
   margin-top:5px;
 }
 
-.col { width:50%; }
+.col { :50%; }
 
 .bigtime {
   font-size:1.4em;
@@ -497,7 +497,7 @@ function windText(d){
 function windArrow(deg){
   return `
   <span style="display:inline-block; transform: rotate(${deg}deg);">
-    <svg width="20" height="20" viewBox="0 0 24 24">
+    <svg ="20" height="20" viewBox="0 0 24 24">
       <path d="M12 2 L12 20 M12 2 L6 8 M12 2 L18 8"
         stroke="black"
         stroke-width="2"
@@ -855,7 +855,19 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     const leftDir = stepDir - Math.PI/2;
     const rightDir = stepDir + Math.PI/2;
 
-    const width = hotR + i * step.speed * 80;
+    
+    // ✅ akkumulert tid
+    let totalTime = 0;
+
+    if (i > 0) {
+      const prevTime = new Date(timeseries[i-1].time);
+      const currTime = new Date(step.time);
+      totalTime += (currTime - prevTime) / 1000; // sekunder
+    }
+
+    // ✅ bredde = vokser med tid, ikke steg
+    const width = hotR + totalTime * 0.5
+    ;
 
     const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
     const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
