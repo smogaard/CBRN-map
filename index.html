@@ -412,18 +412,12 @@ async function updateWeather(){
   if(t0.value){
    const windTrack = [];
 
-  // start med T0
-  windTrack.push({
-    dir: t0data.wind_from_direction,
-    speed: t0data.wind_speed
-  });
-
   // legg til noen fremtidspunkter (forecast)
   for (const ts of data.properties.timeseries){
   
     const tsTime = new Date(ts.time);
 
-    if (tsTime > nowTime){
+    if (tsTime >= t0time && tsTime <= nowTime){
 
       windTrack.push({
         dir: ts.data.instant.details.wind_from_direction,
