@@ -923,8 +923,8 @@ if (turn > 0.2) {
   // konverter til lokalt plan
   const latFactor = Math.cos(pivot.lat * Math.PI / 180);
 
-  const dx0 = startPoint.lat - pivot.lat;
-  const dy0 = (startPoint.lng - pivot.lng) * latFactor;
+  const dx0 = (startPoint.lat - pivot.lat) * latFactor;
+  const dy0 = (startPoint.lng - pivot.lng) ;
 
   for (let s = 1; s <= segments; s++) {
 
