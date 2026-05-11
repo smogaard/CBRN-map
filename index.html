@@ -900,31 +900,23 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
-  currentLeft = newLeft;
-  currentRight = newRight;
+ // lagre gamle først
+const prevLeftPt = { ...currentLeft };
+const prevRightPt = { ...currentRight };
 
-  leftEdge.push([newLeft.lat, newLeft.lng]);
-  rightEdge.push([newRight.lat, newRight.lng]);
-  
-	 // ✅ hvis stor retningsendring → legg inn bue
+// ✅ hvis stor retningsendring → lag bue FØR oppdatering
 if (turn > 0.2) {
 
   const segments = 10;
-
-  // avgjør hvilken vei vinden dreier
   const turningLeft = delta < 0;
 
-  // ✅ konkav side (pivot)
   const pivot = turningLeft ? prevLeftPt : prevRightPt;
-
-  // ✅ startpunkt for ytterkant (før sving)
   const startPoint = turningLeft ? prevRightPt : prevLeftPt;
 
-  // konverter til lokalt plan
   const latFactor = Math.cos(pivot.lat * Math.PI / 180);
 
-  const dx0 = (startPoint.lat - pivot.lat) * latFactor;
-  const dy0 = (startPoint.lng - pivot.lng) ;
+  const dx0 = (startPoint.lng - pivot.lng) * latFactor;
+  const dy0 = startPoint.lat - pivot.lat;
 
   for (let s = 1; s <= segments; s++) {
 
@@ -933,24 +925,29 @@ if (turn > 0.2) {
     const angle =
       (turningLeft ? -Math.abs(delta) : Math.abs(delta)) * t;
 
-    // roter rundt pivot
     const dx =
       dx0 * Math.cos(angle) - dy0 * Math.sin(angle);
 
     const dy =
       dx0 * Math.sin(angle) + dy0 * Math.cos(angle);
 
-    const lat = pivot.lat + dx / latFactor;
-    const lng = pivot.lng + dy;
+    const lng = pivot.lng + dx / latFactor;
+    const lat = pivot.lat + dy;
 
     if (turningLeft) {
       rightEdge.push([lat, lng]);
-      currentRight = { lat, lng };
     } else {
       leftEdge.push([lat, lng]);
-      currentLeft = { lat, lng };
     }
   }
+}
+
+// ✅ SÅ oppdaterer du
+currentLeft = newLeft;
+currentRight = newRight;
+
+leftEdge.push([newLeft.lat, newLeft.lng]);
+rightEdge.push([newRight.lat, newRight.lng]);
 }
 }
 
