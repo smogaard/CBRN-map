@@ -898,10 +898,14 @@ const dy = currentLeft.lng - currentRight.lng;
 
 
 // liten endring → normal utvidelse
+
 if (turn < 0.2) {
 
-  const leftPoint = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
-  const rightPoint = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
+  const deltaWidth = width - prevWidth;
+
+  const leftPoint = destination(currentLeft.lat, currentLeft.lng, leftDir, deltaWidth);
+  const rightPoint = destination(currentRight.lat, currentRight.lng, rightDir, deltaWidth);
+
 
   leftEdge.push([leftPoint.lat, leftPoint.lng]);
   rightEdge.push([rightPoint.lat, rightPoint.lng]);
