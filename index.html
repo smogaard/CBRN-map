@@ -835,13 +835,17 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   
   // ✅ fremdrift
   // ✅ beregn tidsforskjell mellom punkter
-  let dt = 1800; // fallback 30 min
+  const prevTime = i === 0
+  ? new Date(timeseries[0].time)
+  : new Date(timeseries[i-1].time);
 
-  if (i > 0) {
-    const prevTime = new Date(timeseries[i-1].time);
-    const currTime = new Date(timeseries[i].time);
-  dt = (currTime - prevTime) / 1000; // sekunder
-  }
+const currTime = new Date(timeseries[i].time);
+
+let dt = (currTime - prevTime) / 1000;
+
+// fallback hvis noe går galt
+if (!isFinite(dt) || dt <= 0) dt = 60;
+
 
   totalTime += dt;
 	 
