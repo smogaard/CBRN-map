@@ -892,19 +892,17 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   const leftDir = stepDir - Math.PI / 2;
   const rightDir = stepDir + Math.PI / 2;
 
-  // bygg fra center
   
+  // lagre gamle først 
   const prevLeftPt = { ...currentLeft };
   const prevRightPt = { ...currentRight };
-	 
+
+  // beregn nye punkter
   const newLeft = destination(currentCenter.lat, currentCenter.lng, leftDir, width);
   const newRight = destination(currentCenter.lat, currentCenter.lng, rightDir, width);
 
- // lagre gamle først
-const prevLeftPt = { ...currentLeft };
-const prevRightPt = { ...currentRight };
-
-// ✅ hvis stor retningsendring → lag bue FØR oppdatering
+ 
+// ✅ bue basert på prev*
 if (turn > 0.2) {
 
   const segments = 10;
