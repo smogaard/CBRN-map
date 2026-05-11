@@ -982,7 +982,8 @@ for (let i = 0; i <= frontSteps; i++) {
   const a = i / frontSteps;
 
   const angle =
-    centerDir + a * Math.PI/2;
+    centerDir - Math.PI/2 + a * Math.PI/2;
+
 
   const p = destination(
     centerRight.lat,
@@ -1001,8 +1002,10 @@ for (let i = frontSteps; i >= 0; i--) {
 
   const a = i / frontSteps;
 
+  
   const angle =
-    centerDir - a * Math.PI/2;
+    centerDir + Math.PI/2 - a * Math.PI/2;
+
 
   const p = destination(
     centerLeft.lat,
