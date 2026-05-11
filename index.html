@@ -905,28 +905,49 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 	 // ✅ hvis stor retningsendring → legg inn bue
 if (turn > 0.2) {
 
-  const segments = 12;
+  const segments = 10;
 
-  // pivot = forrige center
-  const pivot = currentCenter;
+  // avgjør hvilken vei vinden dreier
+  const turningLeft = delta < 0;
+
+  // ✅ konkav side (pivot)
+  const pivot = turningLeft ? currentLeft : currentRight;
+
+  // ✅ startpunkt for ytterkant (før sving)
+  const startPoint = turningLeft ? currentRight : currentLeft;
+
+  // konverter til lokalt plan
+  const latFactor = Math.cos(pivot.lat * Math.PI / 180);
+
+  const dx0 = startPoint.lat - pivot.lat;
+  const dy0 = (startPoint.lng - pivot.lng) * latFactor;
 
   for (let s = 1; s <= segments; s++) {
 
     const t = s / segments;
 
-    const interpDir = prevDir + delta * t;
+    const angle =
+      (turningLeft ? -Math.abs(delta) : Math.abs(delta)) * t;
 
-    const leftDir_i = interpDir - Math.PI / 2;
-    const rightDir_i = interpDir + Math.PI / 2;
+    // roter rundt pivot
+    const dx =
+      dx0 * Math.cos(angle) - dy0 * Math.sin(angle);
 
-    const width_i = hotR + Math.sqrt(totalTime * t) * 20;
+    const dy =
+      dx0 * Math.sin(angle) + dy0 * Math.cos(angle);
 
-    const arcLeft = destination(pivot.lat, pivot.lng, leftDir_i, width_i);
-    const arcRight = destination(pivot.lat, pivot.lng, rightDir_i, width_i);
+    const lat = pivot.lat + dx;
+    const lng = pivot.lng + dy / latFactor;
 
-    leftEdge.push([arcLeft.lat, arcLeft.lng]);
-    rightEdge.push([arcRight.lat, arcRight.lng]);
+    if (turningLeft) {
+      rightEdge.push([lat, lng]);
+      currentRight = { lat, lng };
+    } else {
+      leftEdge.push([lat, lng]);
+      currentLeft = { lat, lng };
+    }
   }
+}
  }
 }
 
