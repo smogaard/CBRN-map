@@ -382,9 +382,12 @@ async function updateWeather(){
    map.removeLayer(dynamicPlume);
   }
 		 
-  // fallback hvis T=0 ikke finnes
-  if(!t0data && !t0.value){
-    t0data = data.properties.timeseries[0].data.instant.details;
+
+  if (!t0.value) {
+    temp_t0.innerHTML = "-";
+    wind_t0.innerHTML = "-";
+  }
+
   }
   // fallback hvis ingenting ble funnet
   if(!t0data && t0time){
