@@ -421,15 +421,19 @@ async function updateWeather(){
 
       windTrack.push({
         dir: ts.data.instant.details.wind_from_direction,
-        speed: ts.data.instant.details.wind_speed
+        speed: ts.data.instant.details.wind_speed,
+        time: ts.time   // ✅ viktig!
       });
     }
   
     // 🔥 sørg for at første punkt = eksakt T0
+   
     windTrack.unshift({
       dir: t0data.wind_from_direction,
-      speed: t0data.wind_speed
+      speed: t0data.wind_speed,
+      time: t0time.toISOString()
     });
+
     if (windTrack.length < 2) return;
 
 	  
