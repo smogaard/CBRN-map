@@ -954,6 +954,23 @@ else {
     rightEdge.push([newRight.lat, newRight.lng]);
     currentRight = newRight;
   }
+  // ✅ sørg for at left/right ikke har byttet side
+  const dx_lr = currentRight.lng - currentLeft.lng;
+  const dy_lr = currentRight.lat - currentLeft.lat;
+
+  // normal til plume-retningen
+  const nx = Math.cos(stepDir + Math.PI / 2);
+  const ny = Math.sin(stepDir + Math.PI / 2);
+
+  // sjekk hvilken side som faktisk er venstre
+  const dot = dx_lr * nx + dy_lr * ny;
+
+  // hvis feil: bytt
+  if (dot < 0) {
+    const temp = currentLeft;
+    currentLeft = currentRight;
+    currentRight = temp;
+  }
 
   // ✅ 2. ytterkant = bue
   const pivot = turningLeft ? prevLeft : prevRight;
