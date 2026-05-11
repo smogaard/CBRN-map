@@ -410,36 +410,34 @@ async function updateWeather(){
   }
 	  
   if(t0.value){
-   const windTrack = [];
+ 
+const windTrack = [];
 
-  // legg til noen fremtidspunkter (forecast)
-  for (const ts of data.properties.timeseries){
-  
-    const tsTime = new Date(ts.time);
+for (const ts of data.properties.timeseries){
 
-    if (tsTime >= t0time && tsTime <= nowTime){
+  const tsTime = new Date(ts.time);
 
-      windTrack.push({
-        dir: ts.data.instant.details.wind_from_direction,
-        speed: ts.data.instant.details.wind_speed,
-        time: ts.time   // ✅ viktig!
-      });
-    }
-  
-    // 🔥 sørg for at første punkt = eksakt T0
-   
-    windTrack.unshift({
-      dir: t0data.wind_from_direction,
-      speed: t0data.wind_speed,
-      time: t0time.toISOString()
+  if (tsTime >= t0time && tsTime <= nowTime){
+
+    windTrack.push({
+      dir: ts.data.instant.details.wind_from_direction,
+      speed: ts.data.instant.details.wind_speed,
+      time: ts.time
     });
-
-    if (windTrack.length < 2) return;
-
-	  
-    if (windTrack.length >= Math.ceil(elapsedHours * 2)) break; // gir  2 steg i hver påløpte time siden hendelsen
   }
-	  
+	
+  if (windTrack.length < 2) return;
+  if (windTrack.length >= Math.ceil(elapsedHours * 2)) break; // gir  2 steg i hver påløpte time siden hendelsen
+}
+
+// ✅ legg til T0 én gang
+windTrack.unshift({
+  dir: t0data.wind_from_direction,
+  speed: t0data.wind_speed,
+  time: t0time.toISOString()
+});
+
+
 																						console.log("windTrack:", windTrack)
 	  
   dynamicPlume = createDynamicPlume(
