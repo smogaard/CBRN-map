@@ -901,9 +901,8 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
 
   leftEdge.push([newLeft.lat, newLeft.lng]);
   rightEdge.push([newRight.lat, newRight.lng]);
-  }
-
-// ✅ hvis stor retningsendring → legg inn bue
+  
+	 // ✅ hvis stor retningsendring → legg inn bue
 if (turn > 0.2) {
 
   const segments = 12;
@@ -928,6 +927,7 @@ if (turn > 0.2) {
     leftEdge.push([arcLeft.lat, arcLeft.lng]);
     rightEdge.push([arcRight.lat, arcRight.lng]);
   }
+ }
 }
 
 	
