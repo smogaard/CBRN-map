@@ -940,8 +940,8 @@ if (turn > 0.2) {
     const dy =
       dx0 * Math.sin(angle) + dy0 * Math.cos(angle);
 
-    const lat = pivot.lat + dx;
-    const lng = pivot.lng + dy / latFactor;
+    const lat = pivot.lat + dx / latFactor;
+    const lng = pivot.lng + dy;
 
     if (turningLeft) {
       rightEdge.push([lat, lng]);
