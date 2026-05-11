@@ -904,9 +904,7 @@ else {
   // ✅ 2. ytterkant = bue
   const pivot = turningLeft ? prevLeft : prevRight;
 
-  let angleStart = turningLeft
-    ? prevDir - Math.PI/2
-    : prevDir + Math.PI/2;
+  let angleStart = prevDir;
 
   for (let s = 1; s <= segments; s++) {
 
