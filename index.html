@@ -847,14 +847,19 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
   );
 
 	 // 🔥 FØRSTE STEG: alltid rett plume (ingen buer)
+	 
+  let totalTime = 0;
+	 
   if (i === 0) {
 
-    const leftDir = stepDir - Math.PI/2;
-    const rightDir = stepDir + Math.PI/2;
+    // ✅ BRUK T0-retning, ikke stepDir
+    const baseDir = dir;  // dir = windStart (allerede riktig!)
 
+    const leftDir = baseDir - Math.PI/2;
+    const rightDir = baseDir + Math.PI/2;
     
     // ✅ akkumulert tid
-    let totalTime = 0;
+    
 
     if (i > 0) {
       const prevTime = new Date(timeseries[i-1].time);
@@ -880,7 +885,7 @@ function createDynamicPlume(center, hotR, timeseries, windStart){
     continue;
   }
   // ✅ bredde vokser jevnt
-  const width = hotR + i * step.speed * 80;
+  const width = hotR + totalTime * 0.3;
 
   // ✅ sidepunkter bygges rett fra center
   const leftDir = stepDir - Math.PI/2;
