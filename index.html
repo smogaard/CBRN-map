@@ -633,6 +633,7 @@ function updateMap(){
  hotCircle && map.removeLayer(hotCircle);
  warmCircle && map.removeLayer(warmCircle);
  plume && map.removeLayer(plume);
+ plumeNow && map.removeLayer(plumeNow);
 
  // 🔴 HOTZONE (uendret)
  hotCircle = L.circle(pos,{
@@ -673,6 +674,21 @@ if(t0.value){
 
 }
 
+// ✅ Nå-plume (skal alltid vises hvis vi har vinddata)
+if (lastWindDir !== undefined && marker) {
+
+  const nowWindDeg = lastWindDir + 180;
+
+  plumeNow = createStaticNowPlume(
+    pos,
+    hotR,
+    warmR,
+    nowWindDeg
+  ).addTo(map);
+
+  plumeNow.bringToBack();
+}
+	
 // sørg for at hotzone ligger øverst
 if(hotCircle){
   hotCircle.bringToFront();
@@ -1099,6 +1115,10 @@ rightEdge.push([newRight.lat, newRight.lng]);
   });
 }
 
+
+
+
+	
 	
 /* =============================
 11 CLICK
