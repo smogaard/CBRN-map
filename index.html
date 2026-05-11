@@ -944,59 +944,67 @@ for (let s = 1; s <= segments; s++) {
 }
 }
 }
+
+	
+// Lage front på plumen	
 const frontRight = rightEdge[rightEdge.length - 1];
 const frontLeft = leftEdge[leftEdge.length - 1];
 const frontPoints = [];
 
-const frontSteps = 10; // glatthet
+const frontSteps = 10;
 
-// retning langs front (fra venstre til høyre)
+// retning langs front (fra left → right)
 const dx = frontRight[0] - frontLeft[0];
 const dy = frontRight[1] - frontLeft[1];
 
-const length = Math.sqrt(dx*dx + dy*dy);
+const frontAngle = Math.atan2(dy, dx);
 
-// normal (utover fra plume)
-const nx = -dy / length;
-const ny = dx / length;
+// normal (utover plume)
+const normalAngle = frontAngle + Math.PI / 2;
 
 
 	
+// Høyre Kvartbue
 for (let i = 0; i <= frontSteps; i++) {
-  const a = (i / frontSteps) * Math.PI / 2;
 
-  const x =
-    frontRight[0] +
-    nx * Math.cos(a) * hotR +
-    (dx / length) * Math.sin(a) * hotR;
+  const a = i / frontSteps;
 
-  const y =
-    frontRight[1] +
-    ny * Math.cos(a) * hotR +
-    (dy / length) * Math.sin(a) * hotR;
+  const angle =
+    normalAngle - a * Math.PI/2;
 
-  frontPoints.push([x, y]);
+  const p = destination(
+    frontRight[0],
+    frontRight[1],
+    angle,
+    hotR
+  );
+
+  frontPoints.push([p.lat, p.lng]);
 }
 
-
-
-for (let i = frontSteps; i >= 0; i--) {
-  const a = (i / frontSteps) * Math.PI / 2;
-
-  const x =
-    frontLeft[0] +
-    nx * Math.cos(a) * hotR -
-    (dx / length) * Math.sin(a) * hotR;
-
-  const y =
-    frontLeft[1] +
-    ny * Math.cos(a) * hotR -
-    (dy / length) * Math.sin(a) * hotR;
-
-  frontPoints.push([x, y]);
-}
 
 	
+// Venstre kvartbue
+for (let i = frontSteps; i >= 0; i--) {
+
+  const a = i / frontSteps;
+
+  const angle =
+    normalAngle + a * Math.PI/2;
+
+  const p = destination(
+    frontLeft[0],
+    frontLeft[1],
+    angle,
+    hotR
+  );
+
+  frontPoints.push([p.lat, p.lng]);
+}
+``	
+
+	
+
 
 
 return L.polygon([
