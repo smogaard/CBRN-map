@@ -604,9 +604,13 @@ function placeIncident(pos){
  coords.innerHTML =
   "Ulykkessted: "+pos.lat.toFixed(5)+"° N, "+pos.lng.toFixed(5)+"° Ø";
 
- updateMap();
- updateWeather();
- updateNow();
+updateNow();
+
+// ✅ kjør vær først
+updateWeather().then(() => {
+  updateMap();   // tegn plumer etter at vind er hentet
+});
+``
  
 // ✅ oppdater dag/natt med en gang
 if(t0.value){
