@@ -1331,19 +1331,26 @@ const points = Object.entries(density)
   });
 
 // 🔹 finn startpunkt (mest vann)
-let current = null;
+let current = {
+  lat: pos.lat,
+  lng: pos.lng,
+  count: 999
+};
 
-for (const p of points){
-  if (!current || p.count > current.count){
-    current = p;
-  }
-}
-
+	
 // 🔹 følg strøm nedover
 const path = [];
-
+	
+const visited = new Set()
+	
 while (current){
 
+  const key = current.lat.toFixed(5) + "," + current.lng.toFixed(5);
+
+if (visited.has(key)) break;
+
+visited.add(key);
+	
   path.push([current.lat, current.lng]);
 
  let next = null;
@@ -1359,7 +1366,8 @@ if (path.length > 1){
   dirY = current.lat - prev[0];
 }
 
-
+  const heightCache = {};
+	
   for (const p of points){
 
     const d = map.distance(
@@ -1382,6 +1390,30 @@ if (path.length > 1){
       // 🔥 preferer høy density OG avstand nedover
       let score = p.count;
 
+        // 🔥 hent høyde (cache hvis du vil senere)
+       const keyC = current.lat.toFixed(5)+","+current.lng.toFixed(5);
+       const keyN = p.lat.toFixed(5)+","+p.lng.toFixed(5);
+
+       if (!(keyC in heightCache)){
+         heightCache[keyC] = await getElevationDEM(current.lat, current.lng);
+       }
+
+       if (!(keyN in heightCache)){
+         heightCache[keyN] = await getElevationDEM(p.lat, p.lng);
+       }
+
+       const hCurrent = heightCache[keyC];
+       const hNext = heightCache[keyN];
+
+        // ✅ STRAFF hvis oppover
+        if (hNext > hCurrent){
+          score -= 100;   // blokker nesten oppover
+        }
+
+// ✅ bonus hvis nedover
+score += (hCurrent - hNext) * 0.5;
+
+
     // 🔥 bonus for å fortsette samme retning
     if (dirX !== 0 || dirY !== 0){
 
@@ -1390,7 +1422,7 @@ if (path.length > 1){
 
       const dot = dx * dirX + dy * dirY;
 
-      score += dot * 50;   // 🔥 viktig for kontinuitet
+      score += dot * 5;   // 🔥 viktig for kontinuitet
     }
 
       if (score > bestScore){
