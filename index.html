@@ -1332,33 +1332,45 @@ async function createFlowLayer(pos){
     });
 
   // 🔹 koble punkter som ligger nær hverandre
-  for (let i = 0; i < points.length; i++){
+  for (const p1 of points){
 
-    const p1 = points[i];
+  let closest = null;
+  let bestDist = Infinity;
 
-    for (let j = i + 1; j < points.length; j++){
+  for (const p2 of points){
 
-      const p2 = points[j];
+    if (p1 === p2) continue;
 
-      const d = map.distance(
-        [p1.lat, p1.lng],
-        [p2.lat, p2.lng]
-      );
+    const d = map.distance(
+      [p1.lat, p1.lng],
+      [p2.lat, p2.lng]
+    );
 
-      // 🔥 kun koble nære punkter
-      if (d < 40){
+    // 🔥 bare se på nærliggende punkt
+    if (d < 40){
 
-        layers.push(
-          L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
-            color: "#ff0000",
-            weight: 2 + Math.max(p1.count, p2.count),
-            opacity: 0.8
-          })
-        );
+      // 🔥 velg den med høyere density (nedstrøms)
+      if (p2.count >= p1.count && d < bestDist){
+        bestDist = d;
+        closest = p2;
       }
     }
   }
 
+  if (closest){
+
+    layers.push(
+      L.polyline(
+        [[p1.lat, p1.lng], [closest.lat, closest.lng]],
+        {
+          color: "#ff0000",
+          weight: 2 + closest.count,
+          opacity: 0.9
+        }
+      )
+    );
+  }
+}
   // (valgfritt) behold noen prikker svakt
   for (const p of points){
     layers.push(
