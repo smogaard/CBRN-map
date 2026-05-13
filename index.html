@@ -1346,8 +1346,19 @@ while (current){
 
   path.push([current.lat, current.lng]);
 
-  let next = null;
-  let bestScore = -Infinity;
+ let next = null;
+let bestScore = -Infinity;
+
+// 📌 retning fra forrige steg
+let dirX = 0;
+let dirY = 0;
+
+if (path.length > 1){
+  const prev = path[path.length - 2];
+  dirX = current.lng - prev[1];
+  dirY = current.lat - prev[0];
+}
+
 
   for (const p of points){
 
