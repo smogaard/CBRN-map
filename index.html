@@ -1191,11 +1191,11 @@ async function loadTile(z, x, y){
 
 
 
-function getElevationFromImage(img){
+function getElevationFromImage(img, lat, lng, z){
 
   if (!img._ctx) {
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     canvas.width = img.width;
     canvas.height = img.height;
@@ -1205,7 +1205,17 @@ function getElevationFromImage(img){
     img._ctx = ctx;
   }
 
-  const pixel = img._ctx.getImageData(128, 128, 1, 1).data;
+  const scale = Math.pow(2, z);
+
+  const worldX = (lng + 180) / 360 * scale * 256;
+  const worldY =
+    (1 - Math.log(Math.tan(lat * Math.PI/180) + 1 / Math.cos(lat * Math.PI/180)) / Math.PI)
+    / 2 * scale * 256;
+
+  const px = Math.floor(worldX % 256);
+  const py = Math.floor(worldY % 256);
+
+  const pixel = img._ctx.getImageData(px, py, 1, 1).data;
 
   const r = pixel[0];
   const g = pixel[1];
@@ -1214,14 +1224,12 @@ function getElevationFromImage(img){
   return (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
 }
 
-
-
 async function getElevationDEM(lat, lng, zoom = 14){
 
   const { x, y } = latLngToTile(lat, lng, zoom);
   const img = await loadTile(zoom, x, y);
 
-  return getElevationFromImage(img);
+  return getElevationFromImage(img, lat, lng, zoom);
 }
 
 
