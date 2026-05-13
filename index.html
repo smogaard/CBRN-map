@@ -705,11 +705,6 @@ if (marker) {
     
     flowLayer = layer.addTo(map);
 
-    // loop over alle child layers
-    flowLayer.eachLayer(l => {
-      if (l.bringToBack) l.bringToBack();
-    });
-
 
     console.log("FLOW tegnet");
 
@@ -1321,7 +1316,7 @@ async function createFlowLayer(pos){
 
     for (const [lat, lng] of path){
 
-      const key = lat.toFixed(5) + "," + lng.toFixed(5);
+      const key = lat.toFixed(4) + "," + lng.toFixed(4);
       density[key] = (density[key] || 0) + 1;
     }
   }
@@ -1341,15 +1336,15 @@ async function createFlowLayer(pos){
 
     layers.push(
       L.circleMarker([lat, lng], {
-        radius: 2 + count * 2,        // større = mer vann
+        radius: 6 + count * 3,        // større = mer vann
         color: "#ff0000",         // 🔴 rødt som du ønsker
         fillColor: "#ff0000",
         fillOpacity: 1,
-        weight: 0
+        weight: 1
       })
     );
   }
-
+																						console.log("FLOW points:", Object.keys(density).length);
   return L.layerGroup(layers);
 }
 
