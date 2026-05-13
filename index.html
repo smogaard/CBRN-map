@@ -1325,7 +1325,7 @@ async function createFlowLayer(pos){
 
   // 🔹 lag liste av punkter
   const points = Object.entries(density)
-    .filter(([k, v]) => v >= 2)   // 🔥 terskel (juster senere)
+    .filter(([k, v]) => v >= 1)   // 🔥 terskel (juster senere)
     .map(([k, v]) => {
       const [lat, lng] = k.split(",").map(Number);
       return { lat, lng, count: v };
@@ -1346,7 +1346,7 @@ async function createFlowLayer(pos){
       );
 
       // 🔥 kun koble nære punkter
-      if (d < 20){
+      if (d < 40){
 
         layers.push(
           L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
