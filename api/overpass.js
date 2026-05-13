@@ -6,19 +6,31 @@ export default async function handler(req, res){
   [out:json];
   (
     way["natural"="water"](around:${radius},${lat},${lng});
+    way["waterway"](around:${radius},${lat},${lng});
   );
   out geom;
   `;
 
-  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+  const url =
+    "https://overpass-api.de/api/interpreter?data=" +
+    encodeURIComponent(query);
 
   try {
     const r = await fetch(url);
+
+    if (!r.ok) {
+      const text = await r.text();
+      throw new Error(text);
+    }
+
     const data = await r.json();
 
     res.status(200).json(data);
 
   } catch (e){
-    res.status(500).json({ error: "Overpass failed" });
+
+    console.error("Overpass error:", e);
+
+    res.status(200).json({ elements: [] }); // ✅ viktig fallback
   }
 }
