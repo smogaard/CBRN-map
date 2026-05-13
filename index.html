@@ -1357,10 +1357,10 @@ while (current){
     );
 
     // 🔥 kun nærliggende punkt
-    if (d < 50 && d > 1){
+    if (d < 80 && d >
 
       // 🔥 preferer høy density OG avstand nedover
-      const score = p.count - d * 0.05;
+      const score = p.count;
 
       if (score > bestScore){
         bestScore = score;
@@ -1376,7 +1376,16 @@ while (current){
 }
 
 // 🔴 tegn hovedstrøm
+if (path.length < 3){
+
+  console.warn("Flow path for kort:", path.length);
+
+  return L.layerGroup([]);
+}
+
 if (path.length > 2){
+
+	
   layers.push(
     L.polyline(path, {
       color: "#ff0000",
