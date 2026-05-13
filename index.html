@@ -1467,7 +1467,7 @@ async function fetchWaterBodies(lat, lng, radius = 1000){
   const res = await fetch(url);
   const data = await res.json();
 
-  return data.elements;
+  return data && data.elements ? data.elements : [];
 }
 	
 /* =============================
