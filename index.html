@@ -1321,26 +1321,52 @@ async function createFlowLayer(pos){
     }
   }
 
-  const layers = [];
+ const layers = [];
 
-  // 🔹 2. tegn kun punkter med høy akkumulering
+  // 🔹 lag liste av punkter
+  const points = Object.entries(density)
+    .filter(([k, v]) => v >= 2)   // 🔥 terskel (juster senere)
+    .map(([k, v]) => {
+      const [lat, lng] = k.split(",").map(Number);
+      return { lat, lng, count: v };
+    });
 
-  for (const key in density){
+  // 🔹 koble punkter som ligger nær hverandre
+  for (let i = 0; i < points.length; i++){
 
-    const count = density[key];
+    const p1 = points[i];
 
-    // 🔥 bare behold “ekte bekk”
-    if (count < 1) continue;
+    for (let j = i + 1; j < points.length; j++){
 
-    const [lat, lng] = key.split(",").map(Number);
+      const p2 = points[j];
 
+      const d = map.distance(
+        [p1.lat, p1.lng],
+        [p2.lat, p2.lng]
+      );
+
+      // 🔥 kun koble nære punkter
+      if (d < 20){
+
+        layers.push(
+          L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
+            color: "#ff0000",
+            weight: 2 + Math.max(p1.count, p2.count),
+            opacity: 0.8
+          })
+        );
+      }
+    }
+  }
+
+  // (valgfritt) behold noen prikker svakt
+  for (const p of points){
     layers.push(
-      L.circleMarker([lat, lng], {
-        radius: 6 + count * 3,        // større = mer vann
-        color: "#ff0000",         // 🔴 rødt som du ønsker
-        fillColor: "#ff0000",
-        fillOpacity: 1,
-        weight: 1
+      L.circleMarker([p.lat, p.lng], {
+        radius: 2,
+        color: "#ff0000",
+        fillOpacity: 0.5,
+        weight: 0
       })
     );
   }
