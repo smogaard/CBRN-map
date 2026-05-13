@@ -1368,10 +1368,30 @@ if (path.length > 1){
     );
 
     // 🔥 kun nærliggende punkt
-    if (d < 80 && d >
+    if (d < 80 && d > 5){
+
+      // ❌ ikke gå bakover
+      const dx = p.lng - current.lng;
+      const dy = p.lat - current.lat;
+
+      if (dirX !== 0 || dirY !== 0){
+        const dot = dx * dirX + dy * dirY;
+      if (dot < 0) continue;
+    }
 
       // 🔥 preferer høy density OG avstand nedover
-      const score = p.count;
+      let score = p.count;
+
+    // 🔥 bonus for å fortsette samme retning
+    if (dirX !== 0 || dirY !== 0){
+
+      const dx = p.lng - current.lng;
+      const dy = p.lat - current.lat;
+
+      const dot = dx * dirX + dy * dirY;
+
+      score += dot * 50;   // 🔥 viktig for kontinuitet
+    }
 
       if (score > bestScore){
         bestScore = score;
