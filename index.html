@@ -1189,7 +1189,33 @@ async function loadTile(z, x, y){
   });
 }
 
+	
 
+function generateStartPoints(center, radius = 20, count = 8){
+
+  const points = [];
+
+  for (let i = 0; i < count; i++){
+
+    const angle = (i / count) * 2*Math.PI;
+
+    const p = destination(
+      center.lat,
+      center.lng,
+      angle,
+      radius
+    );
+
+    points.push(p);
+  }
+
+  // legg til selve sentrum også
+  points.push(center);
+
+  return points;
+}
+
+	
 
 function getElevationFromImage(img, lat, lng, z){
 
@@ -1278,13 +1304,30 @@ async function traceFlow(startLat, startLng, steps = 20){
 
 async function createFlowLayer(pos){
 
-  const path = await traceFlow(pos.lat, pos.lng, 40);
+  const startPoints = generateStartPoints(pos, 20, 10);
 
-  return L.polyline(path, {
-    color: "#3399ff",
-    weight: 3
-  });
+  const lines = [];
+
+  for (const p of startPoints){
+
+    const path = await traceFlow(p.lat, p.lng, 25);
+
+    if (path.length > 1){
+      lines.push(path);
+    }
+  }
+
+  return L.layerGroup(
+    lines.map(path =>
+      L.polyline(path, {
+        color: "#3399ff",
+        weight: 2,
+        opacity: 0.7
+      })
+    )
+  );
 }
+
 	
 	
 /* =============================
