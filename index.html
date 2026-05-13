@@ -1321,70 +1321,73 @@ async function createFlowLayer(pos){
     }
   }
 
- const layers = [];
+const layers = [];
 
-  // 🔹 lag liste av punkter
-  const points = Object.entries(density)
-    .filter(([k, v]) => v >= 1)   // 🔥 terskel (juster senere)
-    .map(([k, v]) => {
-      const [lat, lng] = k.split(",").map(Number);
-      return { lat, lng, count: v };
-    });
+// 🔹 lag punktliste
+const points = Object.entries(density)
+  .map(([k, v]) => {
+    const [lat, lng] = k.split(",").map(Number);
+    return { lat, lng, count: v };
+  });
 
-  // 🔹 koble punkter som ligger nær hverandre
-  for (const p1 of points){
+// 🔹 finn startpunkt (mest vann)
+let current = null;
 
-  let closest = null;
-  let bestDist = Infinity;
+for (const p of points){
+  if (!current || p.count > current.count){
+    current = p;
+  }
+}
 
-  for (const p2 of points){
+// 🔹 følg strøm nedover
+const path = [];
 
-    if (p1 === p2) continue;
+while (current){
+
+  path.push([current.lat, current.lng]);
+
+  let next = null;
+  let bestScore = -Infinity;
+
+  for (const p of points){
 
     const d = map.distance(
-      [p1.lat, p1.lng],
-      [p2.lat, p2.lng]
+      [current.lat, current.lng],
+      [p.lat, p.lng]
     );
 
-    // 🔥 bare se på nærliggende punkt
-    if (d < 40){
+    // 🔥 kun nærliggende punkt
+    if (d < 50 && d > 1){
 
-      // 🔥 velg den med høyere density (nedstrøms)
-      if (p2.count >= p1.count && d < bestDist){
-        bestDist = d;
-        closest = p2;
+      // 🔥 preferer høy density OG avstand nedover
+      const score = p.count - d * 0.05;
+
+      if (score > bestScore){
+        bestScore = score;
+        next = p;
       }
     }
   }
 
-  if (closest){
+  // stopper hvis ingen fremgang
+  if (!next || path.length > 200) break;
 
-    layers.push(
-      L.polyline(
-        [[p1.lat, p1.lng], [closest.lat, closest.lng]],
-        {
-          color: "#ff0000",
-          weight: 2 + closest.count,
-          opacity: 0.9
-        }
-      )
-    );
-  }
+  current = next;
 }
-  // (valgfritt) behold noen prikker svakt
-  for (const p of points){
-    layers.push(
-      L.circleMarker([p.lat, p.lng], {
-        radius: 2,
-        color: "#ff0000",
-        fillOpacity: 0.5,
-        weight: 0
-      })
-    );
-  }
-																						console.log("FLOW points:", Object.keys(density).length);
-  return L.layerGroup(layers);
+
+// 🔴 tegn hovedstrøm
+if (path.length > 2){
+  layers.push(
+    L.polyline(path, {
+      color: "#ff0000",
+      weight: 6,
+      opacity: 1
+    })
+  );
 }
+
+return L.layerGroup(layers);
+``}
 
 async function fetchWaterBodies(lat, lng, radius = 1000){
 
