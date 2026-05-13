@@ -702,8 +702,14 @@ if (marker) {
       return;
     }
 
+    
     flowLayer = layer.addTo(map);
-    flowLayer.bringToBack();
+
+    // loop over alle child layers
+    flowLayer.eachLayer(l => {
+      if (l.bringToBack) l.bringToBack();
+    });
+
 
     console.log("FLOW tegnet");
 
