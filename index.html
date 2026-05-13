@@ -694,15 +694,25 @@ if (lastWindDir !== undefined && marker) {
 }
 
 	
-// 💧 flow tracing (alltid hvis marker finnes)
 if (marker) {
 
   createFlowLayer(pos).then(layer => {
+
+    if (!layer) {
+      console.log("FLOW: ingen layer");
+      return;
+    }
+
     flowLayer = layer.addTo(map);
     flowLayer.bringToBack();
+
+    console.log("FLOW tegnet");
+
+  }).catch(e => {
+    console.error("FLOW ERROR", e);
   });
 
-}	
+}
 
 	
 // sørg for at hotzone ligger øverst
@@ -1131,44 +1141,108 @@ rightEdge.push([newRight.lat, newRight.lng]);
   });
 }
 
-
 // ==============================
-// 💧 FLOW TRACE (terreng)
+// 💧 FLOW TRACE (DEM-basert)
 // ==============================
 
-async function getElevation(lat, lng) {
-  const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`;
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.results[0].elevation;
-  } catch (e) {
-    return null;
-  }
+const MAPBOX_TOKEN = "pk.eyJ1Ijoic21vZ2FhcmQiLCJhIjoiY21wNDN3N2Y0MGJpbTJ2czdqNm5mYmg2YiJ9.HtW-wfxihHwOJ5ooCqnDtQ";
+
+const DEM_URL =
+  `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${MAPBOX_TOKEN}`;
+
+const tileCache = {};
+
+
+function latLngToTile(lat, lng, zoom){
+
+  const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
+  const y = Math.floor(
+    (1 - Math.log(Math.tan(lat*Math.PI/180) + 1 / Math.cos(lat*Math.PI/180)) / Math.PI)
+    / 2 * Math.pow(2, zoom)
+  );
+
+  return { x, y };
 }
 
 
-async function getSteepestDirection(lat, lng, step = 30) {
+async function loadTile(z, x, y){
 
-  const directions = [0,45,90,135,180,225,270,315];
+  const key = `${z}/${x}/${y}`;
+  if (tileCache[key]) return tileCache[key];
 
-  const centerElev = await getElevation(lat, lng);
-  if (centerElev === null) return null;
+  return new Promise((resolve, reject) => {
+
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+
+    img.onload = () => {
+      tileCache[key] = img;
+      resolve(img);
+    };
+
+    img.onerror = reject;
+
+    img.src = DEM_URL
+      .replace("{z}", z)
+      .replace("{x}", x)
+      .replace("{y}", y);
+  });
+}
+
+
+
+function getElevationFromImage(img){
+
+  if (!img._ctx) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    ctx.drawImage(img, 0, 0);
+
+    img._ctx = ctx;
+  }
+
+  const pixel = img._ctx.getImageData(128, 128, 1, 1).data;
+
+  const r = pixel[0];
+  const g = pixel[1];
+  const b = pixel[2];
+
+  return (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
+}
+
+
+
+async function getElevationDEM(lat, lng, zoom = 14){
+
+  const { x, y } = latLngToTile(lat, lng, zoom);
+  const img = await loadTile(zoom, x, y);
+
+  return getElevationFromImage(img);
+}
+
+
+async function getSteepestDirectionDEM(lat, lng, step = 30){
+
+  const dirs = [0,45,90,135,180,225,270,315];
+
+  const base = await getElevationDEM(lat, lng);
 
   let best = null;
-  let lowest = centerElev;
+  let lowest = base;
 
-  for (let dir of directions) {
+  for(let d of dirs){
 
-    const p = destination(lat, lng, dir * Math.PI/180, step);
+    const p = destination(lat, lng, d * Math.PI/180, step);
+    const e = await getElevationDEM(p.lat, p.lng);
 
-    const e = await getElevation(p.lat, p.lng);
-    if (e === null) continue;
-
-    if (e < lowest) {
+    if(e < lowest){
       lowest = e;
-      best = { lat: p.lat, lng: p.lng };
+      best = p;
     }
   }
 
@@ -1183,7 +1257,7 @@ async function traceFlow(startLat, startLng, steps = 20){
 
   for (let i = 0; i < steps; i++) {
 
-    const next = await getSteepestDirection(current.lat, current.lng);
+    const next = await getSteepestDirectionDEM(current.lat, current.lng);
 
     if (!next) break;
 
@@ -1201,11 +1275,9 @@ async function createFlowLayer(pos){
 
   return L.polyline(path, {
     color: "#3399ff",
-    weight: 3,
-    dashArray: "5,5"
+    weight: 3
   });
 }
-
 	
 	
 /* =============================
@@ -1295,7 +1367,7 @@ hot.oninput = () => {
 
 function newLocation(){ locked=false; }
 
-/* =============================
+/* =============================e
 INTERVALS
 ============================= */
 setInterval(updateNow,60000);
