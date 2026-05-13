@@ -1310,14 +1310,14 @@ async function traceFlow(startLat, startLng, steps = 20){
 
 async function createFlowLayer(pos){
 
-  const startPoints = generateStartPoints(pos, 20, 12);
+  const startPoints = generateStartPoints(pos, 30, 12);
 
   const density = {};
 
   // 🔹 1. bygg density map
   for (const p of startPoints){
 
-    const path = await traceFlow(p.lat, p.lng, 25);
+    const path = await traceFlow(p.lat, p.lng, 40);
 
     for (const [lat, lng] of path){
 
@@ -1335,16 +1335,16 @@ async function createFlowLayer(pos){
     const count = density[key];
 
     // 🔥 bare behold “ekte bekk”
-    if (count < 4) continue;
+    if (count < 1) continue;
 
     const [lat, lng] = key.split(",").map(Number);
 
     layers.push(
       L.circleMarker([lat, lng], {
-        radius: 3 + count * 1.5,        // større = mer vann
+        radius: 2 + count * 2,        // større = mer vann
         color: "#ff0000",         // 🔴 rødt som du ønsker
         fillColor: "#ff0000",
-        fillOpacity: 0.8,
+        fillOpacity: 1,
         weight: 0
       })
     );
