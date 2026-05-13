@@ -1371,9 +1371,23 @@ async function createFlowLayer(pos){
   }
 
   // 🔹 5. HENT OSM VANN
-  const waters = await fetchWaterBodies(pos.lat, pos.lng);
+  let waters = [];
 
-  for (const w of waters){
+  try {
+    const res = await fetchWaterBodies(pos.lat, pos.lng);
+
+    if (Array.isArray(res)) {
+      waters = res;
+    } else {
+      console.warn("Ugyldig water response:", res);
+      waters = [];
+    }
+
+  } catch (e) {
+    console.warn("fetchWaterBodies feilet:", e);
+    waters = [];
+  }
+    for (const w of waters){
 
     if (!w.geometry) continue;
 
