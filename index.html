@@ -1447,7 +1447,8 @@ async function fetchWaterBodies(lat, lng, radius = 1000){
   out geom;
   `;
 
-  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+  const url = `/api/overpass?lat=${lat}&lng=${lng}&radius=${radius}`;
+
 
   const res = await fetch(url);
   const data = await res.json();
