@@ -1310,146 +1310,48 @@ async function traceFlow(startLat, startLng, steps = 20){
 
 async function createFlowLayer(pos){
 
-  // 🔹 1. generer startpunkter
-  const startPoints = generateStartPoints(pos, 20, 10);
+  const startPoints = generateStartPoints(pos, 20, 12);
 
-  const paths = [];
   const density = {};
 
-  // 🔹 2. generer flow paths
+  // 🔹 1. bygg density map
   for (const p of startPoints){
 
     const path = await traceFlow(p.lat, p.lng, 25);
 
-    if (path.length > 1){
+    for (const [lat, lng] of path){
 
-      paths.push(path);
-
-      // bygg density map
-      for (const [lat, lng] of path){
-
-        const key = lat.toFixed(5) + "," + lng.toFixed(5);
-        density[key] = (density[key] || 0) + 1;
-      }
+      const key = lat.toFixed(5) + "," + lng.toFixed(5);
+      density[key] = (density[key] || 0) + 1;
     }
   }
 
-  // 🔹 3. finn "bekkpunkter"
-  const streamPoints = Object.entries(density)
-    .filter(([k, v]) => v >= 3)
-    .map(([k]) => {
-      const [lat, lng] = k.split(",").map(Number);
-      return [lat, lng];
-    });
-
-  // 🔹 4. sorter grovt (enkelt men stabilt)
-  streamPoints.sort((a, b) => a[0] - b[0]);
-
   const layers = [];
 
-  // 🔵 HOVEDBEKK
-  if (streamPoints.length > 2){
+  // 🔹 2. tegn kun punkter med høy akkumulering
 
-    const mainStream = L.polyline(streamPoints, {
-      color: "#0044cc",
-      weight: 5
-    });
+  for (const key in density){
 
-    layers.push(mainStream);
-  }
+    const count = density[key];
 
-  // 🔷 VIS støtte-linjer (svake paths)
-  for (const path of paths){
+    // 🔥 bare behold “ekte bekk”
+    if (count < 4) continue;
+
+    const [lat, lng] = key.split(",").map(Number);
 
     layers.push(
-      L.polyline(path, {
-        color: "#66ccff",
-        weight: 1,
-        opacity: 0.3
+      L.circleMarker([lat, lng], {
+        radius: 3 + count * 1.5,        // større = mer vann
+        color: "#ff0000",         // 🔴 rødt som du ønsker
+        fillColor: "#ff0000",
+        fillOpacity: 0.8,
+        weight: 0
       })
     );
   }
 
-  // 🔹 5. HENT OSM VANN
-  let waters = [];
-
-  try {
-    const res = await fetchWaterBodies(pos.lat, pos.lng);
-
-    if (Array.isArray(res)) {
-      waters = res;
-    } else {
-      console.warn("Ugyldig water response:", res);
-      waters = [];
-    }
-
-  } catch (e) {
-    console.warn("fetchWaterBodies feilet:", e);
-    waters = [];
-  }
-    for (const w of waters){
-
-    if (!w.geometry) continue;
-
-    const poly = w.geometry.map(p => [p.lat, p.lon]);
-
-    // tegn vann
-    const waterLayer = L.polygon(poly, {
-      color: "#0000ff",
-      fillOpacity: 0.2
-    });
-
-    layers.push(waterLayer);
-
-    // 🔹 6. avstandslogikk
-    const samplePoint = poly[0];
-    const d = map.distance(pos, samplePoint);
-
-    const warmR = Number(warm.value);
-
-    if (d < warmR){
-
-      // ✅ hele vannspeilet påvirket
-      layers.push(
-        L.polygon(poly, {
-          color: "red",
-          dashArray: "6,6",
-          fillOpacity: 0
-        })
-      );
-
-    } else {
-
-      // ✅ buesegment i vann
-      const arc = [];
-      const steps = 40;
-
-      for (let i = 0; i <= steps; i++){
-
-        const a = i / steps * Math.PI;
-
-        const p = destination(
-          pos.lat,
-          pos.lng,
-          a,
-          warmR
-        );
-
-        arc.push([p.lat, p.lng]);
-      }
-
-      layers.push(
-        L.polyline(arc, {
-          color: "red",
-          weight: 3
-        })
-      );
-    }
-  }
-
   return L.layerGroup(layers);
-}	
-
+}
 
 async function fetchWaterBodies(lat, lng, radius = 1000){
 
