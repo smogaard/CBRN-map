@@ -637,6 +637,7 @@ function updateMap(){
  warmCircle && map.removeLayer(warmCircle);
  plume && map.removeLayer(plume);
  plumeNow && map.removeLayer(plumeNow);
+ flowLayer && map.removeLayer(flowLayer);
 
  // 🔴 HOTZONE (uendret)
  hotCircle = L.circle(pos,{
@@ -691,6 +692,18 @@ if (lastWindDir !== undefined && marker) {
 
   plumeNow.bringToBack();
 }
+
+	
+// 💧 flow tracing (alltid hvis marker finnes)
+if (marker) {
+
+  createFlowLayer(pos).then(layer => {
+    flowLayer = layer.addTo(map);
+    flowLayer.bringToBack();
+  });
+
+}	
+
 	
 // sørg for at hotzone ligger øverst
 if(hotCircle){
@@ -1119,7 +1132,79 @@ rightEdge.push([newRight.lat, newRight.lng]);
 }
 
 
+// ==============================
+// 💧 FLOW TRACE (terreng)
+// ==============================
 
+async function getElevation(lat, lng) {
+  const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.results[0].elevation;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+async function getSteepestDirection(lat, lng, step = 30) {
+
+  const directions = [0,45,90,135,180,225,270,315];
+
+  const centerElev = await getElevation(lat, lng);
+  if (centerElev === null) return null;
+
+  let best = null;
+  let lowest = centerElev;
+
+  for (let dir of directions) {
+
+    const p = destination(lat, lng, dir * Math.PI/180, step);
+
+    const e = await getElevation(p.lat, p.lng);
+    if (e === null) continue;
+
+    if (e < lowest) {
+      lowest = e;
+      best = { lat: p.lat, lng: p.lng };
+    }
+  }
+
+  return best;
+}
+
+
+async function traceFlow(startLat, startLng, steps = 20){
+
+  let path = [[startLat, startLng]];
+  let current = { lat: startLat, lng: startLng };
+
+  for (let i = 0; i < steps; i++) {
+
+    const next = await getSteepestDirection(current.lat, current.lng);
+
+    if (!next) break;
+
+    path.push([next.lat, next.lng]);
+    current = next;
+  }
+
+  return path;
+}
+
+
+async function createFlowLayer(pos){
+
+  const path = await traceFlow(pos.lat, pos.lng, 25);
+
+  return L.polyline(path, {
+    color: "#3399ff",
+    weight: 3,
+    dashArray: "5,5"
+  });
+}
 
 	
 	
