@@ -1225,7 +1225,7 @@ async function getElevationDEM(lat, lng, zoom = 14){
 }
 
 
-async function getSteepestDirectionDEM(lat, lng, step = 30){
+async function getSteepestDirectionDEM(lat, lng, step = 60){
 
   const dirs = [0,45,90,135,180,225,270,315];
 
@@ -1270,7 +1270,7 @@ async function traceFlow(startLat, startLng, steps = 20){
 
 async function createFlowLayer(pos){
 
-  const path = await traceFlow(pos.lat, pos.lng, 25);
+  const path = await traceFlow(pos.lat, pos.lng, 40);
 
   return L.polyline(path, {
     color: "#3399ff",
