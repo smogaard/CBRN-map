@@ -1389,20 +1389,8 @@ async function createFlowLayer(pos){
     	}
 	  
 														console.log("PATH LENGTH:", path.length);
-	 
-// ✅ sjekk vann KUN én gang
-  fetchWaterBodies(last[0], last[1], 200)
-    .then(water => {
 
-      if (water && water.length > 50){
-        console.log("Treffer vann ✅");
-
-        // 💧 senere: tegn innsjø, skravur osv
-      }
-
-    })
-    .catch(e => console.warn("Water check feilet", e));
-
+if (path.length > 2){
   layers.push(
     L.polyline(path, {
       color: "#ff0000",
@@ -1411,7 +1399,7 @@ async function createFlowLayer(pos){
     })
   );
 }
-
+``
   return L.layerGroup(layers);
 }
 
