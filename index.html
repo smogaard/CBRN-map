@@ -1408,6 +1408,26 @@ async function createFlowLayer(pos){
 
   return L.layerGroup(layers);
 }
+
+	
+
+async function fetchWaterBodies(lat, lng, radius = 100){
+
+  const url = `/api/overpass?lat=${lat}&lng=${lng}&radius=${radius}`;
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    return data && data.elements ? data.elements : [];
+
+  } catch(e){
+    console.warn("Water fetch error", e);
+    return [];
+  }
+}
+
+	
 	
 /* =============================
 11 CLICK
