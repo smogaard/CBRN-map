@@ -1332,7 +1332,7 @@ async function createFlowLayer(pos){
       const next = await getSteepestDirectionDEM(
         current.lat,
         current.lng,
-        5
+        30
       );
 
       if (!next) break;
