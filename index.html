@@ -1309,90 +1309,56 @@ async function createFlowLayer(pos){
   const startPoints = generateStartPoints(pos, 30, 12);
   const layers = [];
 
-	// ✅ hver start = egen fysisk avrenning
-for (const start of startPoints){
+  // ✅ hver start = egen fysisk avrenning
+  for (const start of startPoints){
 
-  let current = {
-    lat: start.lat,
-    lng: start.lng
-  };
+    let current = {
+      lat: start.lat,
+      lng: start.lng
+    };
 
-  const path = [];
-  const visited = new Set();
+    const path = [];
+    const visited = new Set();
 
-  for (let i = 0; i < 150; i++){
+    for (let i = 0; i < 150; i++){
 
-    const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
+      const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
 
-    if (visited.has(key)) break;
-    visited.add(key);
+      if (visited.has(key)) break;
+      visited.add(key);
 
-    path.push([current.lat, current.lng]);
+      path.push([current.lat, current.lng]);
 
-    const next = await getSteepestDirectionDEM(
-      current.lat,
-      current.lng,
-      40
-    );
+      const next = await getSteepestDirectionDEM(
+        current.lat,
+        current.lng,
+        40
+      );
 
-    if (!next) break;
+      if (!next) break;
 
-    const h1 = await getElevationDEM(current.lat, current.lng);
-    const h2 = await getElevationDEM(next.lat, next.lng);
+      const h1 = await getElevationDEM(current.lat, current.lng);
+      const h2 = await getElevationDEM(next.lat, next.lng);
 
-    // ✅ ALDRI oppover
-    if (h2 >= h1) break;
+      // ✅ aldri oppover
+      if (h2 >= h1) break;
 
-    current = next;
+      current = next;
+    }
+
+    // ✅ tegn hver bekk separat
+    if (path.length > 2){
+      layers.push(
+        L.polyline(path, {
+          color: "#ff0000",
+          weight: 3,
+          opacity: 0.8
+        })
+      );
+    }
   }
 
-  // ✅ tegn hver bekk separat
-  if (path.length > 2){
-    layers.push(
-      L.polyline(path, {
-        color: "#ff0000",
-        weight: 3,
-        opacity: 0.8
-      })
-    );
-  }
-}
-
- 
-  return L.layerGroup([]);
-}
-
-if (path.length > 2){
-
-  layers.push(
-    L.polyline(path, {
-      color: "#ff0000",
-      weight: 5,
-      opacity: 1
-    })
-  );
-}
-
-return L.layerGroup(layers);
-}
-
-async function fetchWaterBodies(lat, lng, radius = 1000){
-
-  const query = `
-  [out:json];
-  (
-    way["natural"="water"](around:${radius},${lat},${lng});
-  );
-  out geom;
-  `;
-
-  const url = `/api/overpass?lat=${lat}&lng=${lng}&radius=${radius}`;
-
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  return data && data.elements ? data.elements : [];
+  return L.layerGroup(layers);
 }
 	
 /* =============================
