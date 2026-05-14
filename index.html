@@ -1309,7 +1309,6 @@ async function createFlowLayer(pos){
   const startPoints = generateStartPoints(pos, 30, 12);
   const layers = [];
 
-  // ✅ hver start = egen fysisk avrenning
   for (const start of startPoints){
 
     let current = {
@@ -1320,10 +1319,9 @@ async function createFlowLayer(pos){
     const path = [];
     const visited = new Set();
 
-    for (let i = 0; i < 1000; i++){
+    for (let i = 0; i < 500; i++){
 
       const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
-
       if (visited.has(key)) break;
       visited.add(key);
 
@@ -1337,167 +1335,76 @@ async function createFlowLayer(pos){
 
       if (!next) break;
 
-      	const h1 = await getElevationDEM(current.lat, current.lng);
-     	const h2 = await getElevationDEM(next.lat, next.lng);
+      const h1 = await getElevationDEM(current.lat, current.lng);
+      const h2 = await getElevationDEM(next.lat, next.lng);
 
-		// ✅ stopp hvis nesten flatt (lav gradient)
-		if (Math.abs(h1 - h2) < 0.15){
+      // ✅ stopp hvis nesten flatt
+      if (Math.abs(h1 - h2) < 0.15){
+        break;
+      }
 
-  			// ✅ prøv et lengre steg før vi gir opp
-  			const next2 = await getSteepestDirectionDEM(
-    		current.lat,
-    		current.lng,
-    		100
-  			);
+      // ✅ fallback hvis oppover
+      if (h2 >= h1){
 
-  			if (!next2) break;
+        let best = null;
+        let lowest = h1;
 
-  			current = next2;
-  			continue;
-		}
-     		
-     	if (h2 >= h1){
+        const dirs = [0,45,90,135,180,225,270,315];
 
-  			let best = null;
- 			let lowest = h1;
+        for (let d of dirs){
 
- 			const dirs = [0,45,90,135,180,225,270,315];
+          const p = destination(
+            current.lat,
+            current.lng,
+            d * Math.PI/180,
+            40
+          );
 
- 			for (let d of dirs){
+          const h = await getElevationDEM(p.lat, p.lng);
 
-   				const p = destination(
-    				  current.lat,
-     				 current.lng,
-     				 d * Math.PI/180,
-      				40
-   					 );
+          if (h < lowest){
+            lowest = h;
+            best = p;
+          }
+        }
 
-   				const h = await getElevationDEM(p.lat, p.lng);
+        if (best){
+          current = best;
+        } else {
 
-   				if (h < lowest){
-      				lowest = h;
-     				 best = p;
-    			}
-  			}
+          const next2 = await getSteepestDirectionDEM(
+            current.lat,
+            current.lng,
+            80
+          );
 
- 			if (best){
-    			current = best;
-  			} else {
+          if (!next2) break;
 
-    			const next2 = await getSteepestDirectionDEM(
-      				current.lat,
-      				current.lng,
-      				80
-    				);
+          current = next2;
+        }
 
-    			if (!next2) break;
-    				current = next2;
- 				}
-
-				} else {
-  					current = next;
-				}
-    	}
-	  
-														console.log("PATH LENGTH:", path.length);
-
-if (path.length > 2){
-
-  const last = path[path.length - 1];
-
-fetchWaterBodies(last[0], last[1], 800)
-  .then(water => {
-
-    if (!water || water.length === 0) return;
-
-    let closest = null;
-    let bestDist = Infinity;
-
-    for (let el of water){
-
-      if (!el.lat || !el.lon) continue;
-
-      const dx = el.lat - last[0];
-      const dy = el.lon - last[1];
-      const dist = dx*dx + dy*dy;
-
-      if (dist < bestDist){
-        bestDist = dist;
-        closest = el;
+      } else {
+        current = next;
       }
     }
 
-    if (closest){
+    console.log("PATH LENGTH:", path.length);
 
-      // ✅ legg direkte på kartet (IKKE i layers)
-      L.polyline(
-        [last, [closest.lat, closest.lon]],
-        {
-          color: "#0088ff",
-          weight: 2,
-          dashArray: "4,6",
-          opacity: 0.7
-        }
-      ).addTo(map);
-    }
+    if (path.length > 2){
 
-  })
-  .catch(e => console.warn("water feilet", e));
-
-if (water && water.length > 0){
-
-  let closest = null;
-  let bestDist = Infinity;
-
-  for (let el of water){
-
-    if (!el.lat || !el.lon) continue;
-
-    const dx = el.lat - last[0];
-    const dy = el.lon - last[1];
-    const dist = dx*dx + dy*dy;
-
-    if (dist < bestDist){
-      bestDist = dist;
-      closest = el;
+      layers.push(
+        L.polyline(path, {
+          color: "#ff0000",
+          weight: 3,
+          opacity: 0.8
+        })
+      );
     }
   }
-
-  if (closest){
-
-    layers.push(
-      L.polyline(
-        [
-          last,
-          [closest.lat, closest.lon]
-        ],
-        {
-          color: "#0088ff",
-          weight: 2,
-          dashArray: "4,6",
-          opacity: 0.7
-        }
-      )
-    );
-  }
-}
-
-
-
-  // ✅ original flow
-  layers.push(
-    L.polyline(path, {
-      color: "#ff0000",
-      weight: 3,
-      opacity: 0.8
-    })
-  );
-}
-
-}
 
   return L.layerGroup(layers);
-}
+}	
+
 
 	
 
