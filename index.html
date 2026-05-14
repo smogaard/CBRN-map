@@ -1307,207 +1307,58 @@ async function traceFlow(startLat, startLng, steps = 20){
 async function createFlowLayer(pos){
 
   const startPoints = generateStartPoints(pos, 30, 12);
+  const layers = [];
 
-  const density = {};
+	// ✅ hver start = egen fysisk avrenning
+for (const start of startPoints){
 
-  // 🔹 1. bygg density map
-  for (const p of startPoints){
+  let current = {
+    lat: start.lat,
+    lng: start.lng
+  };
 
-    const path = await traceFlow(p.lat, p.lng, 40);
+  const path = [];
+  const visited = new Set();
 
-    for (const [lat, lng] of path){
+  for (let i = 0; i < 150; i++){
 
-      const key = lat.toFixed(4) + "," + lng.toFixed(4);
-      density[key] = (density[key] || 0) + 1;
-    }
-  }
+    const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
 
-const layers = [];
+    if (visited.has(key)) break;
+    visited.add(key);
 
-// 🔹 lag punktliste
-const points = Object.entries(density)
-  .map(([k, v]) => {
-    const [lat, lng] = k.split(",").map(Number);
-    return { lat, lng, count: v };
-  });
+    path.push([current.lat, current.lng]);
 
-// 🔹 finn startpunkt (mest vann)
-let current = {
-  lat: pos.lat,
-  lng: pos.lng,
-  count: 999
-};
-
-	
-// 🔹 følg strøm nedover
-const path = [];
-	
-const visited = new Set()
-	
-while (current){
-
-  const key = current.lat.toFixed(5) + "," + current.lng.toFixed(5);
-
-if (visited.has(key)) break;
-
-visited.add(key);
-	
-  path.push([current.lat, current.lng]);
-
- let candidates = [];
-
-// 📌 retning fra forrige steg
-let dirX = 0;
-let dirY = 0;
-
-if (path.length > 1){
-  const prev = path[path.length - 2];
-  dirX = current.lng - prev[1];
-  dirY = current.lat - prev[0];
-}
-
-  const heightCache = {};
-	
-  for (const p of points){
-
-    const d = map.distance(
-      [current.lat, current.lng],
-      [p.lat, p.lng]
+    const next = await getSteepestDirectionDEM(
+      current.lat,
+      current.lng,
+      40
     );
 
-    // 🔥 kun nærliggende punkt
-    if (d < 120 && d > 5){
+    if (!next) break;
 
-      // ❌ ikke gå bakover
-      const dx = p.lng - current.lng;
-      const dy = p.lat - current.lat;
+    const h1 = await getElevationDEM(current.lat, current.lng);
+    const h2 = await getElevationDEM(next.lat, next.lng);
 
-      if (dirX !== 0 || dirY !== 0){
-        const dot = dx * dirX + dy * dirY;
-      if (dot < 0) continue;
-    }
+    // ✅ ALDRI oppover
+    if (h2 >= h1) break;
 
-      // 🔥 preferer høy density OG avstand nedover
-      let score = p.count;
-
-        // 🔥 hent høyde (cache hvis du vil senere)
-       const keyC = current.lat.toFixed(5)+","+current.lng.toFixed(5);
-       const keyN = p.lat.toFixed(5)+","+p.lng.toFixed(5);
-
-       if (!(keyC in heightCache)){
-         heightCache[keyC] = await getElevationDEM(current.lat, current.lng);
-       }
-
-       if (!(keyN in heightCache)){
-         heightCache[keyN] = await getElevationDEM(p.lat, p.lng);
-       }
-
-       const hCurrent = heightCache[keyC];
-       const hNext = heightCache[keyN];
-
-        // ✅ STRAFF hvis oppover
-        if (hNext > hCurrent){
-        continue; // ❌ aldri gå opp eller flatt
-        }
-
-// ✅ bonus hvis nedover
-score += (hCurrent - hNext) * 2;
-
-
-    // 🔥 bonus for å fortsette samme retning
-    if (dirX !== 0 || dirY !== 0){
-
-      const dx = p.lng - current.lng;
-      const dy = p.lat - current.lat;
-
-      const dot = dx * dirX + dy * dirY;
-
-      score += dot * 1;   // 🔥 viktig for kontinuitet
-    }
-
-     if (score > 0){   // 🔥 terskel
-       candidates.push({ p, score });
-     }
-    }
+    current = next;
   }
 
-
-	
-// 🔍 fallback: hvis ingen kandidater
-if (candidates.length === 0){
-
-  let bestP = null;
-  let lowest = Infinity;
-
-  for (const p of points){
-
-    const d = map.distance(
-      [current.lat, current.lng],
-      [p.lat, p.lng]
-    );
-
-    if (d < 120 && d > 5){
-
-      const keyN = p.lat.toFixed(5)+","+p.lng.toFixed(5);
-
-      if (!(keyN in heightCache)){
-        heightCache[keyN] = await getElevationDEM(p.lat, p.lng);
-      }
-
-      const hNext = heightCache[keyN];
-
-      if (hNext < lowest){
-        lowest = hNext;
-        bestP = p;
-      }
-    }
-  }
-
-  if (bestP){
-    candidates.push({ p: bestP, score: 1 });
-  } else {
-    break;
-  }
-}
-
-
-	
-  // ✅ hvis ingen kandidater → stopp
-if (candidates.length === 0) break;
-
-// ✅ sorter beste først
-candidates.sort((a,b) => b.score - a.score);
-
-	
-// ✅ behold topp 2 (splitting)
-const best = candidates.slice(0, 2);
-
-
-	// ✅ legg til hovedretning
-current = best[0].p;
-
-// ✅ tegn sekundær gren (splitting)
-if (best.length > 1){
-
-  layers.push(
-    L.polyline(
-      [...path, [best[1].p.lat, best[1].p.lng]],
-      {
+  // ✅ tegn hver bekk separat
+  if (path.length > 2){
+    layers.push(
+      L.polyline(path, {
         color: "#ff0000",
         weight: 3,
-        opacity: 0.7
-      }
-    )
-  );
+        opacity: 0.8
+      })
+    );
+  }
 }
 
-}
-
-// 🔴 tegn hovedstrøm
-if (path.length < 3){
-
-  console.warn("Flow path for kort:", path.length);
-
+ 
   return L.layerGroup([]);
 }
 
