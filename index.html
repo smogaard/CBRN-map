@@ -1422,6 +1422,8 @@ function connectFlowsToWater(layer){
     fetchWaterBodies(last.lat, last.lng, 800)
       .console.log("water:", water.length);
 	  .then(water => {
+
+	  														onsole.log("WATER FOUND:", water.length);   // ✅ LEGG INN DENNE
 																
         if (!water || water.length === 0) return;
 
