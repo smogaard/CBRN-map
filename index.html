@@ -1381,12 +1381,15 @@ async function createFlowLayer(pos){
   current = next2;
   continue;
  }
+// ✅ bruk fallback hvis vi fant bedre punkt
+current = best;
+continue;
 }
 
 		 // 💧 sjekk om vi har nådd vann
       const water = await fetchWaterBodies(next.lat, next.lng, 200);
 
-      if (water && water.length > 10){
+      if (water && water.length > 50){
   		path.push([next.lat, next.lng]);
 	  	break;
 	  }
@@ -1394,7 +1397,9 @@ async function createFlowLayer(pos){
 
       current = next;
     }
-
+	  
+														console.log("PATH LENGTH:", path.length);
+	  
     // ✅ tegn hver bekk separat
     if (path.length > 2){
       layers.push(
