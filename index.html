@@ -1353,8 +1353,7 @@ visited.add(key);
 	
   path.push([current.lat, current.lng]);
 
- let next = null;
-let bestScore = -Infinity;
+ let candidates = [];
 
 // 📌 retning fra forrige steg
 let dirX = 0;
@@ -1425,18 +1424,18 @@ score += (hCurrent - hNext) * 5;
       score += dot * 5;   // 🔥 viktig for kontinuitet
     }
 
-      if (score > bestScore){
-        bestScore = score;
-        next = p;
-      }
+     if (score > 0){   // 🔥 terskel
+       candidates.push({ p, score });
+     }
     }
   }
 
 
 	
-// 🔍 fallback: hvis ingen nedover funnet
-if (!next){
+// 🔍 fallback: hvis ingen kandidater
+if (candidates.length === 0){
 
+  let bestP = null;
   let lowest = Infinity;
 
   for (const p of points){
@@ -1449,22 +1448,49 @@ if (!next){
     if (d < 120 && d > 5){
 
       const keyN = p.lat.toFixed(5)+","+p.lng.toFixed(5);
+
+      if (!(keyN in heightCache)){
+        heightCache[keyN] = await getElevationDEM(p.lat, p.lng);
+      }
+
       const hNext = heightCache[keyN];
 
       if (hNext < lowest){
         lowest = hNext;
-        next = p;
+        bestP = p;
       }
     }
   }
+
+  if (bestP){
+    candidates.push({ p: bestP, score: 1 });
+  } else {
+    break;
+  }
 }
+``
 
 	
-  // stopper hvis ingen fremgang
-  if (!next || path.length > 200) break;
+  // ✅ hvis ingen kandidater → stopp
+if (candidates.length === 0) break;
 
-  current = next;
-}
+// ✅ sorter beste først
+candidates.sort((a,b) => b.score - a.score);
+
+	
+// ✅ behold topp 2 (splitting)
+const best = candidates.slice(0, 2);
+
+	
+// legg til beste punkt i path
+path.push([best[0].p.lat, best[0].p.lng]);
+current = best[0].p;
+continue;
+
+	
+// ✅ velg beste videre kandidat
+current = best[0].p;
+continue
 
 // 🔴 tegn hovedstrøm
 if (path.length < 3){
