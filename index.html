@@ -1443,18 +1443,19 @@ function connectFlowsToWater(layer){
 
         if (closest){
 
-          L.polyline(
-            [
-              [last.lat, last.lng],
-              [closest.lat, closest.lon]
-            ],
-            {
-              color: "#0088ff",
-              weight: 2,
-              dashArray: "4,6",
-              opacity: 0.7
-            }
-          ).addTo(map);
+         
+			L.polyline(
+			  [
+			    [last.lat, last.lng],
+			    [closest.lat, closest.lon]
+			  ],
+			  {
+			    color: "#0000ff",   // HELBLÅ
+			    weight: 5,          // tykk
+			    opacity: 1          // 100%
+			  }
+			).addTo(map).bringToFront();
+
         }
 
       })
