@@ -1420,8 +1420,9 @@ function connectFlowsToWater(layer){
     const last = latlngs[latlngs.length - 1];
 
     fetchWaterBodies(last.lat, last.lng, 800)
-      .then(water => {
-
+      .console.log("water:", water.length);
+	  .then(water => {
+																
         if (!water || water.length === 0) return;
 
         let closest = null;
