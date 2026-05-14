@@ -1341,30 +1341,23 @@ async function createFlowLayer(pos){
       const h2 = await getElevationDEM(next.lat, next.lng);
 
 
-      // 💧 sjekk om vi har nådd vann
-      const water = await fetchWaterBodies(current.lat, current.lng, 50);
+     		
+     	if (h2 >= h1){
 
-      if (water && water.length > 0){
-      break;
-      }
+        // 🔍 fallback: finn laveste nabo
+        let best = null;
+  		let lowest = h1;
 
-		
-     if (h2 >= h1){
+   		const dirs = [0,45,90,135,180,225,270,315];
 
-  // 🔍 fallback: finn laveste nabo
-  let best = null;
-  let lowest = h1;
+  		for (let d of dirs){
 
-  const dirs = [0,45,90,135,180,225,270,315];
-
-  for (let d of dirs){
-
-    const p = destination(
-      current.lat,
-      current.lng,
-      d * Math.PI/180,
-      40
-    );
+    	const p = destination(
+      	current.lat,
+      	current.lng,
+      	d * Math.PI/180,
+      	40
+    	);
 
     const h = await getElevationDEM(p.lat, p.lng);
 
@@ -1390,6 +1383,14 @@ async function createFlowLayer(pos){
  }
 }
 
+		 // 💧 sjekk om vi har nådd vann
+      const water = await fetchWaterBodies(next.lat, next.lng, 200);
+
+      if (water && water.length > 10){
+  		path.push([next.lat, next.lng]);
+	  	break;
+	  }
+		
 
       current = next;
     }
