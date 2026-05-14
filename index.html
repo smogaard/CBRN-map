@@ -1337,82 +1337,57 @@ async function createFlowLayer(pos){
 
       if (!next) break;
 
-      const h1 = await getElevationDEM(current.lat, current.lng);
-      const h2 = await getElevationDEM(next.lat, next.lng);
+      	const h1 = await getElevationDEM(current.lat, current.lng);
+     	const h2 = await getElevationDEM(next.lat, next.lng);
 
-
+		// ✅ stopp hvis nesten flatt (lav gradient)
+		if (Math.abs(h1 - h2) < 0.3){
+		  	break;
+		}
      		
      	if (h2 >= h1){
 
-  let best = null;
-  let lowest = h1;
+  			let best = null;
+ 			let lowest = h1;
 
-  const dirs = [0,45,90,135,180,225,270,315];
+ 			const dirs = [0,45,90,135,180,225,270,315];
 
-  for (let d of dirs){
+ 			for (let d of dirs){
 
-    const p = destination(
-      current.lat,
-      current.lng,
-      d * Math.PI/180,
-      40
-    );
+   				const p = destination(
+    				  current.lat,
+     				 current.lng,
+     				 d * Math.PI/180,
+      				40
+   					 );
 
-    const h = await getElevationDEM(p.lat, p.lng);
+   				const h = await getElevationDEM(p.lat, p.lng);
 
-    if (h < lowest){
-      lowest = h;
-      best = p;
-    }
-  }
+   				if (h < lowest){
+      				lowest = h;
+     				 best = p;
+    			}
+  			}
 
-  if (best){
-    current = best;
-  } else {
+ 			if (best){
+    			current = best;
+  			} else {
 
-    const next2 = await getSteepestDirectionDEM(
-      current.lat,
-      current.lng,
-      80
-    );
+    			const next2 = await getSteepestDirectionDEM(
+      				current.lat,
+      				current.lng,
+      				80
+    				);
 
-    if (!next2) break;
+    			if (!next2) break;
+    				current = next2;
+ 				}
 
-    current = next2;
-  }
-
-} else {
-  current = next;
-}
-
-		 // 💧 sjekk om vi har nådd vann
-   //   const water = await fetchWaterBodies(next.lat, next.lng, 200);
-
-     // if (water && water.length > 50){
-  		//path.push([next.lat, next.lng]);
-	  	//break;
-	 // }
-// ✅ sjekk vann sjeldent (hver 10. steg)
-if (i % 10 === 0){
-
-  let water = [];
-
-  try {
-    water = await fetchWaterBodies(current.lat, current.lng, 200);
-  } catch(e) {
-    console.warn("water feilet", e);
-  }
-
-  if (water && water.length > 50){
-    path.push([current.lat, current.lng]);
-    break;
-  }
-}
-
-		
-
-      current = next;
-    }
+				} else {
+  					current = next;
+				}
+	  		}	
+    	}
 	  
 														console.log("PATH LENGTH:", path.length);
 	  
