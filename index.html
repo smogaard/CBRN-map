@@ -1386,12 +1386,12 @@ async function createFlowLayer(pos){
 }
 
 		 // 💧 sjekk om vi har nådd vann
-      const water = await fetchWaterBodies(next.lat, next.lng, 200);
+   //   const water = await fetchWaterBodies(next.lat, next.lng, 200);
 
-      if (water && water.length > 50){
-  		path.push([next.lat, next.lng]);
-	  	break;
-	  }
+     // if (water && water.length > 50){
+  		//path.push([next.lat, next.lng]);
+	  	//break;
+	 // }
 		
 
       current = next;
