@@ -1341,8 +1341,19 @@ async function createFlowLayer(pos){
      	const h2 = await getElevationDEM(next.lat, next.lng);
 
 		// ✅ stopp hvis nesten flatt (lav gradient)
-		if (Math.abs(h1 - h2) < 0.3){
-		  	break;
+		if (Math.abs(h1 - h2) < 0.15){
+
+  			// ✅ prøv et lengre steg før vi gir opp
+  			const next2 = await getSteepestDirectionDEM(
+    		current.lat,
+    		current.lng,
+    		100
+  			);
+
+  			if (!next2) break;
+
+  			current = next2;
+  			continue;
 		}
      		
      	if (h2 >= h1){
