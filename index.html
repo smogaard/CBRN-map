@@ -1432,6 +1432,34 @@ score += (hCurrent - hNext) * 5;
     }
   }
 
+
+	
+// fallback: hvis ingen klart nedover, velg svakest oppover
+if (!next){
+
+  let lowest = Infinity;
+
+  for (const p of points){
+
+    const d = map.distance(
+      [current.lat, current.lng],
+      [p.lat, p.lng]
+    );
+
+    if (d < 120 && d > 5){
+
+      const keyN = p.lat.toFixed(5)+","+p.lng.toFixed(5);
+      const hNext = heightCache[keyN];
+
+      if (hNext < lowest){
+        lowest = hNext;
+        next = p;
+      }
+    }
+  }
+}
+
+	
   // stopper hvis ingen fremgang
   if (!next || path.length > 200) break;
 
