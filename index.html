@@ -1389,18 +1389,28 @@ async function createFlowLayer(pos){
     	}
 	  
 														console.log("PATH LENGTH:", path.length);
-	  
-    // ✅ tegn hver bekk separat
-    if (path.length > 2){
-      layers.push(
-        L.polyline(path, {
-          color: "#ff0000",
-          weight: 3,
-          opacity: 0.8
-        })
-      );
-    }
-  }
+	 
+// ✅ sjekk vann KUN én gang
+  fetchWaterBodies(last[0], last[1], 200)
+    .then(water => {
+
+      if (water && water.length > 50){
+        console.log("Treffer vann ✅");
+
+        // 💧 senere: tegn innsjø, skravur osv
+      }
+
+    })
+    .catch(e => console.warn("Water check feilet", e));
+
+  layers.push(
+    L.polyline(path, {
+      color: "#ff0000",
+      weight: 3,
+      opacity: 0.8
+    })
+  );
+}
 
   return L.layerGroup(layers);
 }
