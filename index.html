@@ -1344,20 +1344,19 @@ async function createFlowLayer(pos){
      		
      	if (h2 >= h1){
 
-        // 🔍 fallback: finn laveste nabo
-        let best = null;
-  		let lowest = h1;
+  let best = null;
+  let lowest = h1;
 
-   		const dirs = [0,45,90,135,180,225,270,315];
+  const dirs = [0,45,90,135,180,225,270,315];
 
-  		for (let d of dirs){
+  for (let d of dirs){
 
-    	const p = destination(
-      	current.lat,
-      	current.lng,
-      	d * Math.PI/180,
-      	40
-    	);
+    const p = destination(
+      current.lat,
+      current.lng,
+      d * Math.PI/180,
+      40
+    );
 
     const h = await getElevationDEM(p.lat, p.lng);
 
@@ -1367,23 +1366,23 @@ async function createFlowLayer(pos){
     }
   }
 
- if (!best){
+  if (best){
+    current = best;
+  } else {
 
-  // 🔁 prøv litt større steg
-  const next2 = await getSteepestDirectionDEM(
-    current.lat,
-    current.lng,
-    80
-  );
+    const next2 = await getSteepestDirectionDEM(
+      current.lat,
+      current.lng,
+      80
+    );
 
-  if (!next2) break;
+    if (!next2) break;
 
-  current = next2;
-  continue;
- }
-// ✅ bruk fallback hvis vi fant bedre punkt
-current = best;
-continue;
+    current = next2;
+  }
+
+} else {
+  current = next;
 }
 
 		 // 💧 sjekk om vi har nådd vann
