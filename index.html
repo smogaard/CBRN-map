@@ -13,7 +13,7 @@ body { margin:0; }
 .controls {
   position:absolute;
   bottom:10px;
-  left:50%;e
+  :50%;
   transform:translateX(-50%);
   background:white;
   padding:10px;
@@ -1410,7 +1410,7 @@ if (path.length > 1){
         }
 
 // ✅ bonus hvis nedover
-score += (hCurrent - hNext) * 5;
+score += (hCurrent - hNext) * 2;
 
 
     // 🔥 bonus for å fortsette samme retning
@@ -1421,7 +1421,7 @@ score += (hCurrent - hNext) * 5;
 
       const dot = dx * dirX + dy * dirY;
 
-      score += dot * 5;   // 🔥 viktig for kontinuitet
+      score += dot * 1;   // 🔥 viktig for kontinuitet
     }
 
      if (score > 0){   // 🔥 terskel
@@ -1468,7 +1468,7 @@ if (candidates.length === 0){
     break;
   }
 }
-``
+
 
 	
   // ✅ hvis ingen kandidater → stopp
@@ -1481,16 +1481,26 @@ candidates.sort((a,b) => b.score - a.score);
 // ✅ behold topp 2 (splitting)
 const best = candidates.slice(0, 2);
 
-	
-// legg til beste punkt i path
-path.push([best[0].p.lat, best[0].p.lng]);
-current = best[0].p;
-continue;
 
-	
-// ✅ velg beste videre kandidat
+	// ✅ legg til hovedretning
 current = best[0].p;
-continue
+
+// ✅ tegn sekundær gren (splitting)
+if (best.length > 1){
+
+  layers.push(
+    L.polyline(
+      [...path, [best[1].p.lat, best[1].p.lng]],
+      {
+        color: "#ff0000",
+        weight: 3,
+        opacity: 0.7
+      }
+    )
+  );
+}
+
+}
 
 // 🔴 tegn hovedstrøm
 if (path.length < 3){
@@ -1502,11 +1512,10 @@ if (path.length < 3){
 
 if (path.length > 2){
 
-	
   layers.push(
     L.polyline(path, {
       color: "#ff0000",
-      weight: 6,
+      weight: 5,
       opacity: 1
     })
   );
