@@ -1407,7 +1407,7 @@ if (path.length > 1){
 
         // ✅ STRAFF hvis oppover
         if (hNext > hCurrent){
-          score -= 100;   // blokker nesten oppover
+        continue; // ❌ aldri gå opp eller flatt
         }
 
 // ✅ bonus hvis nedover
