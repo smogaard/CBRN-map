@@ -1392,6 +1392,19 @@ async function createFlowLayer(pos){
   		//path.push([next.lat, next.lng]);
 	  	//break;
 	 // }
+let water = [];
+
+try {
+  water = await fetchWaterBodies(current.lat, current.lng, 200);
+} catch(e) {
+  console.warn("water feilet", e);
+}
+
+if (water && water.length > 50){
+  path.push([current.lat, current.lng]);
+  break;
+}
+
 		
 
       current = next;
