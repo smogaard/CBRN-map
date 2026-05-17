@@ -168,6 +168,42 @@ let locked = false;
 let forecastHours = 1;
 let t0WindDir = 0;
 let t0data;
+let loadedTiles = {};
+
+
+// =============================
+// ELVIS TILES
+// =============================
+
+function getTileId(lat, lng){
+  const x = Math.floor(lng * 5);
+  const y = Math.floor(lat * 5);
+  return `${x}_${y}`;
+}
+
+async function loadTile(lat, lng){
+
+  const id = getTileId(lat, lng);
+
+  if (loadedTiles[id]) return;
+
+  const filename = `elvis_tiles/id_${id}.geojson`;
+
+  try{
+    const res = await fetch(filename);
+    const data = await res.json();
+
+    loadedTiles[id] = data;
+
+    console.log("Loaded tile:", filename);
+
+    // 👇 (valgfritt: vis elver visuelt)
+    L.geoJSON(data, { color:"#00ffff", weight:1 }).addTo(map);
+
+  } catch(e){
+    console.warn("Manglende tile:", filename);
+  }
+}
 
 
 /* =============================
@@ -510,6 +546,7 @@ forecastSelect.onchange = () => {
   updateWeather();
 };
 
+	
 
 /* =============================
 6 EVENT TEXT (NY)
@@ -593,8 +630,17 @@ function updateElapsed(){
 /* =============================
 10 MAP
 ============================= */
+
 function placeIncident(pos){
 
+// Hent riktig tile med vassdragsinformasjon
+loadTile(pos.lat, pos.lng);
+
+loadTile(pos.lat + 0.2, pos.lng);
+loadTile(pos.lat - 0.2, pos.lng);
+loadTile(pos.lat, pos.lng + 0.2);
+loadTile(pos.lat, pos.lng - 0.2);
+	
  marker && map.removeLayer(marker);
  hotCircle && map.removeLayer(hotCircle);
  warmCircle && map.removeLayer(warmCircle);
@@ -621,8 +667,13 @@ if(t0.value){
 dn_now.innerHTML =
   getDayNight(new Date(), pos)==="day"?"☀️ Dag":"🌙 Natt";
 
+
+
+
 }
 
+
+	
 function updateMap(){
 
  if(!marker) return;
@@ -1193,6 +1244,40 @@ async function loadTile(z, x, y){
   });
 }
 
+
+function findNearestStream(point){
+
+  let closest = null;
+  let bestDist = Infinity;
+
+  for (let key in loadedTiles){
+
+    const data = loadedTiles[key];
+    if (!data) continue;
+
+    for (let f of data.features){
+
+      const coords = f.geometry.coordinates;
+
+      for (let i = 0; i < coords.length; i++){
+
+        const lon = coords[i][0];
+        const lat = coords[i][1];
+
+        const dx = lat - point.lat;
+        const dy = lon - point.lng;
+        const dist = dx*dx + dy*dy;
+
+        if (dist < bestDist){
+          bestDist = dist;
+          closest = [lat, lon];
+        }
+      }
+    }
+  }
+
+  return closest;
+}
 	
 
 function generateStartPoints(center, radius = 20, count = 8){
@@ -1419,48 +1504,25 @@ function connectFlowsToWater(layer){
 
     const last = latlngs[latlngs.length - 1];
 
-    fetchWaterBodies(last.lat, last.lng, 2000)
-            .then(water => {
-																console.log("WATER FOUND:", water.length);   // ✅ LEGG INN DENNE
-																
-        if (!water || water.length === 0) return;
+   const stream = findNearestStream(last);
 
-        let closest = null;
-        let bestDist = Infinity;
+	if (!stream){
+  	console.log("Ingen ELVIS funnet");
+  	return;
+	}
 
-        for (let el of water){
+	L.polyline(
+  	[
+	    [last.lat, last.lng],
+    	stream
+  	],
+  	{
+	    color: "#00ffff",
+	    weight: 4,
+	    opacity: 1
+  	}
+	).addTo(map).bringToFront();
 
-          if (!el.lat || !el.lon) continue;
-
-          const dx = el.lat - last.lat;
-          const dy = el.lon - last.lng;
-          const dist = dx*dx + dy*dy;
-
-          if (dist < bestDist){
-            bestDist = dist;
-            closest = el;
-          }
-        }
-
-        if (closest){
-
-         
-			L.polyline(
-			  [
-			    [last.lat, last.lng],
-			    [closest.lat, closest.lon]
-			  ],
-			  {
-			    color: "#0000ff",   // HELBLÅ
-			    weight: 5,          // tykk
-			    opacity: 1          // 100%
-			  }
-			).addTo(map).bringToFront();
-
-        }
-
-      })
-      .catch(e => console.warn("water feilet", e));
   });
 }
 
