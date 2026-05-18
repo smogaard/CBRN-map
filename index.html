@@ -1278,8 +1278,49 @@ function findNearestStream(point){
 
   return closest;
 }
-	
 
+	
+	
+function followStream(startPoint){
+
+  for (let key in loadedTiles){
+
+    const data = loadedTiles[key];
+    if (!data) continue;
+
+    for (let f of data.features){
+
+      const coords = f.geometry.coordinates;
+
+      for (let i = 0; i < coords.length; i++){
+
+        const lon = coords[i][0];
+        const lat = coords[i][1];
+
+        const dx = lat - startPoint[0];
+        const dy = lon - startPoint[1];
+        const dist = dx*dx + dy*dy;
+
+        if (dist < 0.00001){
+
+          const path = [];
+
+          // ✅ følg linja videre
+          for (let j = i; j < coords.length; j++){
+            path.push([coords[j][1], coords[j][0]]);
+          }
+
+          return path;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+
+	
 function generateStartPoints(center, radius = 20, count = 8){
 
   const points = [];
@@ -1506,23 +1547,34 @@ function connectFlowsToWater(layer){
 
    const stream = findNearestStream(last);
 
-	if (!stream){
-  	console.log("Ingen ELVIS funnet");
-  	return;
-	}
+if (!stream){
+  console.log("Ingen ELVIS funnet");
+  return;
+}
 
-	L.polyline(
-  	[
-	    [last.lat, last.lng],
-    	stream
-  	],
-  	{
-	    color: "#00ffff",
-	    weight: 4,
-	    opacity: 1
-  	}
-	).addTo(map).bringToFront();
+// ✅ tegn kobling til elv
+L.polyline(
+  [
+    [last.lat, last.lng],
+    stream
+  ],
+  {
+    color: "#00ffff",
+    weight: 4
+  }
+).addTo(map);
 
+// ✅ følg elva videre
+const path = followStream(stream);
+
+if (path){
+
+  L.polyline(path,{
+    color:"#00ffff",
+    weight:3
+  }).addTo(map);
+}
+``
   });
 }
 
