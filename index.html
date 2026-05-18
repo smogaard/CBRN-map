@@ -182,7 +182,7 @@ function getTileId(lat, lng){
   return `${x}_${y}`;
 }
 
-async function loadTile(lat, lng){
+async function loadElvisTile(lat, lng){
 
   const id = getTileId(lat, lng);
 
@@ -635,12 +635,13 @@ function updateElapsed(){
 function placeIncident(pos){
 
 // Hent riktig tile med vassdragsinformasjon
-loadTile(pos.lat, pos.lng);
 
-loadTile(pos.lat + 0.2, pos.lng);
-loadTile(pos.lat - 0.2, pos.lng);
-loadTile(pos.lat, pos.lng + 0.2);
-loadTile(pos.lat, pos.lng - 0.2);
+loadElvisTile(pos.lat, pos.lng);
+loadElvisTile(pos.lat + 0.2, pos.lng);
+loadElvisTile(pos.lat - 0.2, pos.lng);
+loadElvisTile(pos.lat, pos.lng + 0.2);
+loadElvisTile(pos.lat, pos.lng - 0.2);
+
 	
  marker && map.removeLayer(marker);
  hotCircle && map.removeLayer(hotCircle);
