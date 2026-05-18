@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+	<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8"/>
@@ -666,10 +666,6 @@ if(t0.value){
 // ✅ oppdater nå-visning med en gang
 dn_now.innerHTML =
   getDayNight(new Date(), pos)==="day"?"☀️ Dag":"🌙 Natt";
-
-
-
-
 }
 
 
@@ -1449,6 +1445,37 @@ async function createFlowLayer(pos){
 
     for (let i = 0; i < 500; i++){
 
+	 const stream = findNearestStream(current);
+
+	 if (stream){
+
+  	  // sjekk om vi er nær nok elv
+    	const dx = current.lat - stream[0];
+  	    const dy = current.lng - stream[1];
+    	const dist = dx*dx + dy*dy;
+
+	   if (dist < 0.00002){
+
+    		console.log("SNAP TO ELVIS!");
+
+   		 	// ✅ slutt på DEM-flow
+   		 	path.push([stream[0], stream[1]]);
+
+    	// ✅ returner tidlig
+    	break;
+  	  	}
+	  }
+
+	  const riverPath = followStream(stream);
+
+		if (riverPath){
+
+		  L.polyline(riverPath, {
+		    color:"#00ffff",
+		    weight:3
+		  }).addTo(map);
+		}
+		
       const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
       if (visited.has(key)) break;
       visited.add(key);
