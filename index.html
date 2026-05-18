@@ -1508,11 +1508,20 @@ async function createFlowLayer(pos){
     	const dist = dx*dx + dy*dy;
 
     	if (dist < SNAP_DIST){
+			
+																	console.log("SNAPPET! dist:", dist);
+
+			// 🔵 VIS SNAP-PUNKT
+			L.circle([stream[0], stream[1]], {
+ 			 radius: 20,
+			 color: "blue"
+			}).addTo(map);
+
 
       	console.log("SNAPPET TIL ELVIS");
 
       	// legg inn punktet på elva
-      	path.push(stream);
+      	path.push([stream[0], stream[1]]);
 
       	// ✅ STOPP DEM-flow her
       	break;
@@ -1535,7 +1544,7 @@ async function createFlowLayer(pos){
 
       // ✅ stopp hvis nesten flatt
       if (Math.abs(h1 - h2) < 0.15){
-        break;
+        //break;
       }
 
       // ✅ fallback hvis oppover
@@ -1583,7 +1592,34 @@ async function createFlowLayer(pos){
       }
     }
 
-    console.log("PATH LENGTH:", path.length);
+	// 🔴 FORCE SNAP hvis vi aldri traff elv
+	if (path.length > 0){
+
+  		const lastPoint = path[path.length - 1];
+
+  		const stream = findNearestStream({
+    		lat: lastPoint[0],
+    		lng: lastPoint[1]
+  		});
+
+  	if (stream){
+
+    																console.log("FORCED SNAP");
+
+    	// 🔵 vis også denne
+    	L.circle([stream[0], stream[1]], {
+      	radius: 20,
+      	color: "purple"
+    	}).addTo(map);
+
+    	path.push(stream);
+  	}
+}
+
+
+
+	  
+    																console.log("PATH LENGTH:", path.length);
 
     if (path.length > 2){
 
