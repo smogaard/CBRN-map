@@ -1423,7 +1423,14 @@ function getElevationFromImage(img, lat, lng, z){
   return (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
 }
 
-async function getElevationDEM(lat, lng, zoom = 14){
+
+async function getElevationDEM(lat, lng){
+
+  const zoom = 14;   // ✅ tving zoom
+
+	if (!zoom){
+ 	 																console.error("ZOOM UNDEFINED!");
+	}
 
   const { x, y } = latLngToTile(lat, lng, zoom);
   const img = await loadDEMTile(zoom, x, y);
