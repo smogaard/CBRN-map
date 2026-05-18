@@ -1217,7 +1217,7 @@ function latLngToTile(lat, lng, zoom){
 }
 
 
-async function loadTile(z, x, y){
+async function loadDEMTile(z, x, y){
 
   const key = `${z}/${x}/${y}`;
   if (tileCache[key]) return tileCache[key];
@@ -1425,7 +1425,7 @@ function getElevationFromImage(img, lat, lng, z){
 async function getElevationDEM(lat, lng, zoom = 14){
 
   const { x, y } = latLngToTile(lat, lng, zoom);
-  const img = await loadTile(zoom, x, y);
+  const img = await loadDEMTile(zoom, x, y);
 
   return getElevationFromImage(img, lat, lng, zoom);
 }
