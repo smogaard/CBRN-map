@@ -1277,44 +1277,88 @@ function findNearestStream(point){
 
 	
 	
-function followStream(startPoint){
+function followFullRiver(startPoint){
 
-  for (let key in loadedTiles){
+  let current = startPoint;
+  const fullPath = [];
 
-    const data = loadedTiles[key];
-    if (!data) continue;
+  const visited = new Set();
 
-    for (let f of data.features){
+  for (let step = 0; step < 50; step++){
 
-      const coords = f.geometry.coordinates;
+    let foundSegment = null;
+    let foundIndex = -1;
+    let foundCoords = null;
 
-      for (let i = 0; i < coords.length; i++){
+    // 🔍 finn segment som inneholder punktet
+    for (let key in loadedTiles){
 
-        const lon = coords[i][0];
-        const lat = coords[i][1];
+      const data = loadedTiles[key];
+      if (!data) continue;
 
-        const dx = lat - startPoint[0];
-        const dy = lon - startPoint[1];
-        const dist = dx*dx + dy*dy;
+      for (let f of data.features){
 
-        if (dist < 0.00001){
+        const coords = f.geometry.coordinates;
 
-          const path = [];
+        for (let i = 0; i < coords.length; i++){
 
-          // ✅ følg linja videre
-          for (let j = i; j < coords.length; j++){
-            path.push([coords[j][1], coords[j][0]]);
+          const dx = coords[i][1] - current[0];
+          const dy = coords[i][0] - current[1];
+          const dist = dx*dx + dy*dy;
+
+          if (dist < 0.00002){
+
+            foundSegment = f;
+            foundIndex = i;
+            foundCoords = coords;
+            break;
           }
-
-          return path;
         }
+
+        if (foundSegment) break;
       }
+
+      if (foundSegment) break;
     }
+
+    if (!foundSegment){
+      console.log("Ingen videre segment");
+      break;
+    }
+
+    // ✅ følg resten av segmentet
+    for (let j = foundIndex; j < foundCoords.length; j++){
+
+      const lat = foundCoords[j][1];
+      const lon = foundCoords[j][0];
+
+      const key = lat.toFixed(5)+","+lon.toFixed(5);
+
+      if (visited.has(key)) continue;
+
+      visited.add(key);
+      fullPath.push([lat, lon]);
+    }
+
+    // 👉 hopp til slutten av segmentet
+    const last = fullPath[fullPath.length - 1];
+
+    // ✅ finn neste nærmeste elv (kobling)
+    let next = findNearestStream({
+      lat: last[0],
+      lng: last[1]
+    });
+
+    if (!next){
+      console.log("STOP – sannsynlig vannspeil");
+      break;
+    }
+
+    current = next;
   }
 
-  return null;
+  return fullPath;
 }
-
 
 	
 function generateStartPoints(center, radius = 20, count = 8){
@@ -1445,33 +1489,29 @@ async function createFlowLayer(pos){
 
     for (let i = 0; i < 500; i++){
 
-	 const stream = findNearestStream(current);
+	 const stream = findNearestStream(last);
 
-	 if (stream){
+		if (!stream){
+		  console.log("Ingen ELVIS funnet");
+		  return;
+		}
 
-  	  // sjekk om vi er nær nok elv
-    	const dx = current.lat - stream[0];
-  	    const dy = current.lng - stream[1];
-    	const dist = dx*dx + dy*dy;
+		// kobling
+		L.polyline(
+		  [
+		    [last.lat, last.lng],
+		    stream
+		  ],
+		  { color:"#00ffff", weight:4 }
+		).addTo(map);
 
-	   if (dist < 0.00002){
+		// ✅ følg hele vassdraget
+		const riverPath = followFullRiver(stream);
 
-    		console.log("SNAP TO ELVIS!");
+		if (riverPath && riverPath.length > 0){
 
-   		 	// ✅ slutt på DEM-flow
-   		 	path.push([stream[0], stream[1]]);
-
-    	// ✅ returner tidlig
-    	break;
-  	  	}
-	  }
-
-	  const riverPath = followStream(stream);
-
-		if (riverPath){
-
-		  L.polyline(riverPath, {
-		    color:"#00ffff",
+		  L.polyline(riverPath,{
+		    color:"#0088ff",
 		    weight:3
 		  }).addTo(map);
 		}
