@@ -1493,10 +1493,15 @@ async function createFlowLayer(pos){
 	for (let i = 0; i < 500; i++){
 
   	const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
-  	if (visited.has(key)) break;
+  	if (visited.has(key)) continue;
   	visited.add(key);
 
   	path.push([current.lat, current.lng]);
+	
+	if (i % 20 === 0){
+  																	console.log("FLOW running, step:", i);
+	}
+
 
   	// ✅ NYTT: sjekk om vi er nær en elv
   	const stream = findNearestStream(current);
@@ -1593,7 +1598,7 @@ async function createFlowLayer(pos){
     }
 
 	// 🔴 FORCE SNAP hvis vi aldri traff elv
-	if (path.length > 0){
+	if (path.length > 5){
 
   		const lastPoint = path[path.length - 1];
 
@@ -1612,7 +1617,7 @@ async function createFlowLayer(pos){
       	color: "purple"
     	}).addTo(map);
 
-    	path.push(stream);
+    	path.push([stream[0], stream[1]]);
   	}
 }
 
