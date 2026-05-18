@@ -169,7 +169,8 @@ let forecastHours = 1;
 let t0WindDir = 0;
 let t0data;
 let loadedTiles = {};
-
+	
+const SNAP_DIST = 0.0001;
 
 // =============================
 // ELVIS TILES
@@ -1257,8 +1258,8 @@ function findNearestStream(point){
 
       for (let i = 0; i < coords.length; i++){
 
-        const lon = coords[i][0];
         const lat = coords[i][1];
+        const lon = coords[i][0];
 
         const dx = lat - point.lat;
         const dy = lon - point.lng;
@@ -1275,6 +1276,7 @@ function findNearestStream(point){
   return closest;
 }
 
+
 	
 	
 function followFullRiver(startPoint){
@@ -1284,7 +1286,7 @@ function followFullRiver(startPoint){
 
   const visited = new Set();
 
-  for (let step = 0; step < 50; step++){
+  for (let step = 0; step < 200; step++){
 
     let foundSegment = null;
     let foundIndex = -1;
@@ -1306,7 +1308,7 @@ function followFullRiver(startPoint){
           const dy = coords[i][0] - current[1];
           const dist = dx*dx + dy*dy;
 
-          if (dist < 0.00002){
+          if (dist < SNAP_DIST){
 
             foundSegment = f;
             foundIndex = i;
@@ -1487,48 +1489,46 @@ async function createFlowLayer(pos){
     const path = [];
     const visited = new Set();
 
-    for (let i = 0; i < 500; i++){
+    
+	for (let i = 0; i < 500; i++){
 
-	 const stream = findNearestStream(last);
+  	const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
+  	if (visited.has(key)) break;
+  	visited.add(key);
 
-		if (!stream){
-		  console.log("Ingen ELVIS funnet");
-		  return;
-		}
+  	path.push([current.lat, current.lng]);
 
-		// kobling
-		L.polyline(
-		  [
-		    [last.lat, last.lng],
-		    stream
-		  ],
-		  { color:"#00ffff", weight:4 }
-		).addTo(map);
+  	// ✅ NYTT: sjekk om vi er nær en elv
+  	const stream = findNearestStream(current);
 
-		// ✅ følg hele vassdraget
-		const riverPath = followFullRiver(stream);
+  	if (stream){
 
-		if (riverPath && riverPath.length > 0){
+    	const dx = current.lat - stream[0];
+    	const dy = current.lng - stream[1];
+    	const dist = dx*dx + dy*dy;
 
-		  L.polyline(riverPath,{
-		    color:"#0088ff",
-		    weight:3
-		  }).addTo(map);
-		}
-		
-      const key = current.lat.toFixed(5)+","+current.lng.toFixed(5);
-      if (visited.has(key)) break;
-      visited.add(key);
+    	if (dist < SNAP_DIST){
 
-      path.push([current.lat, current.lng]);
+      	console.log("SNAPPET TIL ELVIS");
 
-      const next = await getSteepestDirectionDEM(
-        current.lat,
-        current.lng,
-        30
-      );
+      	// legg inn punktet på elva
+      	path.push(stream);
 
-      if (!next) break;
+      	// ✅ STOPP DEM-flow her
+      	break;
+    	}
+  	}
+
+  // ↙️ RESTEN AV DIN KODE SKAL KOMME ETTER DETTE
+
+  const next = await getSteepestDirectionDEM(
+    current.lat,
+    current.lng,
+    30
+  );
+
+  if (!next) break;
+
 
       const h1 = await getElevationDEM(current.lat, current.lng);
       const h2 = await getElevationDEM(next.lat, next.lng);
@@ -1603,6 +1603,34 @@ async function createFlowLayer(pos){
 
 	
 
+function smoothPath(path){
+
+  if (!path || path.length < 2) return path;
+
+  const smooth = [];
+
+  for (let i = 1; i < path.length; i++){
+
+    const prev = path[i-1];
+    const curr = path[i];
+
+    const mid = [
+      (prev[0] + curr[0]) / 2,
+      (prev[1] + curr[1]) / 2
+    ];
+
+    smooth.push(prev);
+    smooth.push(mid);
+  }
+
+  smooth.push(path[path.length - 1]);
+
+  return smooth;
+}
+
+
+	
+
 function connectFlowsToWater(layer){
 
   layer.eachLayer(poly => {
@@ -1620,28 +1648,30 @@ if (!stream){
 }
 
 // ✅ tegn kobling til elv
-L.polyline(
-  [
-    [last.lat, last.lng],
-    stream
-  ],
-  {
-    color: "#00ffff",
-    weight: 4
-  }
-).addTo(map);
+	L.polyline(
+ 	 [
+ 	   [last.lat, last.lng],
+ 	   stream
+  	],
+ 	 {
+   	 color: "#00ffff",
+   	 weight: 4
+  	}
+	).addTo(map);
 
-// ✅ følg elva videre
-const path = followStream(stream);
+	// ✅ følg elva videre
+	const rawPath = followFullRiver(stream);
+	const path = smoothPath(rawPath);
 
-if (path){
 
-  L.polyline(path,{
-    color:"#00ffff",
-    weight:3
-  }).addTo(map);
-}
-``
+	if (path && path.length > 0){
+
+ 	 L.polyline(path,{
+	   color:"#00ffff",
+ 	   weight:3
+ 	 }).addTo(map);
+	}
+
   });
 }
 
