@@ -1,8 +1,0 @@
-{
-"type": "FeatureCollection",
-"name": "id_4965",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "objektType": "ElvBekk", "strekningLnr": "196015390", "elvelengde_m": 270.33, "elvID": "196-74-246", "vatnLnr": null, "vassdragsnummer": "196.AE42", "nedborfeltVassdragNr": null, "elvenavn": null, "elvNavnHierarki": "Barduelva/Målselvvassdraget", "elveordenStrahler": 1, "regulert": null, "andelQNormal6190_prosent": -9999, "andelQNormalKlassifisert": -9999, "grenseElv": null, "skAarsversjon": 2016, "dataUttaksdato": "20260514", "eksportType": "NVEs nedlastningsløsning", "id": 4965, "left": 19.647110304999998, "top": 68.37026971, "right": 19.847110304999998, "bottom": 68.17026971, "row_index": 14, "col_index": 75 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 19.842344920510747, 68.370072721724128 ], [ 19.842303438265358, 68.37026971 ] ] ] } }
-]
-}
